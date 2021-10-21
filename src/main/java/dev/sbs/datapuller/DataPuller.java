@@ -1,7 +1,7 @@
-package gg.sbs.datapuller;
+package dev.sbs.datapuller;
 
-import gg.sbs.api.SimplifiedApi;
-import gg.sbs.datapuller.tasks.HypixelResourceTask;
+import dev.sbs.datapuller.tasks.HypixelResourceTask;
+import dev.sbs.api.SimplifiedApi;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
