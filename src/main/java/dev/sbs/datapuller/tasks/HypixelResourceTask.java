@@ -216,9 +216,10 @@ public class HypixelResourceTask {
         Map<String, Object> requirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), HashMap.class);
         Map<String, Object> catacombsRequirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), HashMap.class);
         Map<String, Object> essence = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getEssence()), HashMap.class);
+
         if (item.getTier() != null) {
             RarityModel existingRarity = rarityRepository.findFirstOrNullCached(
-                    Pair.of(RarityModel::getHypixelName, item.getTier()),
+                    Pair.of(RarityModel::getName, item.getTier()),
                     Pair.of(RarityModel::isHasHypixelName, true)
             );
             if (existingRarity == null) {
@@ -233,7 +234,7 @@ public class HypixelResourceTask {
             }
         }
         RarityModel rarity = rarityRepository.findFirstOrNullCached(
-                Pair.of(RarityModel::getHypixelName, item.getTier()),
+                Pair.of(RarityModel::getName, item.getTier()),
                 Pair.of(RarityModel::isHasHypixelName, true)
         );
         if (existingItem != null) {
