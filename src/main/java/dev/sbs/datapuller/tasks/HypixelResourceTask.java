@@ -6,19 +6,19 @@ import dev.sbs.api.client.hypixel.response.resource.ResourceCollectionsResponse;
 import dev.sbs.api.client.hypixel.response.resource.ResourceItemsResponse;
 import dev.sbs.api.client.hypixel.response.resource.ResourceSkillsResponse;
 import dev.sbs.api.data.sql.exception.SqlException;
-import dev.sbs.api.model.sql.collectionitems.CollectionItemModel;
-import dev.sbs.api.model.sql.collectionitems.CollectionItemRepository;
-import dev.sbs.api.model.sql.collectionitemtiers.CollectionItemTierModel;
-import dev.sbs.api.model.sql.collectionitemtiers.CollectionItemTierRepository;
-import dev.sbs.api.model.sql.collections.CollectionModel;
+import dev.sbs.api.model.sql.collections.collectionitems.CollectionItemSqlModel;
+import dev.sbs.api.model.sql.collections.collectionitems.CollectionItemRepository;
+import dev.sbs.api.model.sql.collections.collectionitemtiers.CollectionItemTierSqlModel;
+import dev.sbs.api.model.sql.collections.collectionitemtiers.CollectionItemTierRepository;
+import dev.sbs.api.model.sql.collections.CollectionSqlModel;
 import dev.sbs.api.model.sql.collections.CollectionRepository;
-import dev.sbs.api.model.sql.items.ItemModel;
+import dev.sbs.api.model.sql.items.ItemSqlModel;
 import dev.sbs.api.model.sql.items.ItemRepository;
-import dev.sbs.api.model.sql.rarities.RarityModel;
+import dev.sbs.api.model.sql.rarities.RaritySqlModel;
 import dev.sbs.api.model.sql.rarities.RarityRepository;
-import dev.sbs.api.model.sql.skilllevels.SkillLevelModel;
-import dev.sbs.api.model.sql.skilllevels.SkillLevelRepository;
-import dev.sbs.api.model.sql.skills.SkillModel;
+import dev.sbs.api.model.sql.skills.skilllevels.SkillLevelSqlModel;
+import dev.sbs.api.model.sql.skills.skilllevels.SkillLevelRepository;
+import dev.sbs.api.model.sql.skills.SkillSqlModel;
 import dev.sbs.api.model.sql.skills.SkillRepository;
 import dev.sbs.api.util.tuple.Pair;
 
@@ -57,15 +57,15 @@ public class HypixelResourceTask {
         ResourceItemsResponse items = hypixelResourceData.getItems();
         try {
             for (Map.Entry<String, ResourceSkillsResponse.Skill> skillEntry : skills.getSkills().entrySet()) {
-                SkillModel skill = updateSkill(skillEntry.getValue(), skillEntry.getKey());
+                SkillSqlModel skill = updateSkill(skillEntry.getValue(), skillEntry.getKey());
                 for (ResourceSkillsResponse.SkillLevel skillLevel : skillEntry.getValue().getLevels()) {
                     updateSkillLevel(skillLevel, skill);
                 }
             }
             for (Map.Entry<String, ResourceCollectionsResponse.Collection> collectionEntry : collections.getCollections().entrySet()) {
-                CollectionModel collection = updateCollection(collectionEntry.getValue(), collectionEntry.getKey());
+                CollectionSqlModel collection = updateCollection(collectionEntry.getValue(), collectionEntry.getKey());
                 for (Map.Entry<String, ResourceCollectionsResponse.CollectionItem> collectionItemEntry : collectionEntry.getValue().getItems().entrySet()) {
-                    CollectionItemModel collectionItem = updateCollectionItem(collectionItemEntry.getValue(), collectionItemEntry.getKey(), collection);
+                    CollectionItemSqlModel collectionItem = updateCollectionItem(collectionItemEntry.getValue(), collectionItemEntry.getKey(), collection);
                     for (ResourceCollectionsResponse.CollectionTier collectionTier : collectionItemEntry.getValue().getTiers()) {
                         updateCollectionTier(collectionTier, collectionItem);
                     }
@@ -79,9 +79,9 @@ public class HypixelResourceTask {
         }
     }
 
-    private static SkillModel updateSkill(ResourceSkillsResponse.Skill skill, String key) throws SqlException {
-        SkillModel existingSkill = skillRepository.findFirstOrNullCached(
-                SkillModel::getSkillKey, key
+    private static SkillSqlModel updateSkill(ResourceSkillsResponse.Skill skill, String key) throws SqlException {
+        SkillSqlModel existingSkill = skillRepository.findFirstOrNullCached(
+                SkillSqlModel::getKey, key
         );
         if (existingSkill != null) {
             if (!(equalsWithNull(existingSkill.getName(), skill.getName())
@@ -96,22 +96,22 @@ public class HypixelResourceTask {
             }
             return existingSkill;
         } else {
-            SkillModel newSkill = new SkillModel();
-            newSkill.setSkillKey(key);
+            SkillSqlModel newSkill = new SkillSqlModel();
+            newSkill.setKey(key);
             newSkill.setName(skill.getName());
             newSkill.setDescription(skill.getDescription());
             newSkill.setMaxLevel(skill.getMaxLevel());
             long id = skillRepository.save(newSkill);
             skillRepository.refreshItems();
-            return skillRepository.findFirstOrNullCached(SkillModel::getId, id);
+            return skillRepository.findFirstOrNullCached(SkillSqlModel::getId, id);
         }
     }
 
-    private static void updateSkillLevel(ResourceSkillsResponse.SkillLevel skillLevel, SkillModel skill) throws SqlException {
+    private static void updateSkillLevel(ResourceSkillsResponse.SkillLevel skillLevel, SkillSqlModel skill) throws SqlException {
         @SuppressWarnings({"unchecked"}) // Doesn't matter because findFirstOrNull uses generics
-        SkillLevelModel existingSkillLevel = skillLevelRepository.findFirstOrNullCached(
-                Pair.of(SkillLevelModel::getSkill, skill),
-                Pair.of(SkillLevelModel::getSkillLevel, skillLevel.getLevel())
+        SkillLevelSqlModel existingSkillLevel = skillLevelRepository.findFirstOrNullCached(
+                Pair.of(SkillLevelSqlModel::getSkill, skill),
+                Pair.of(SkillLevelSqlModel::getSkillLevel, skillLevel.getLevel())
         );
         if (existingSkillLevel != null) {
             if (!(equalsWithNull(existingSkillLevel.getUnlocks(), skillLevel.getUnlocks())
@@ -123,9 +123,9 @@ public class HypixelResourceTask {
                 skillLevelRepository.refreshItems();
             }
         } else {
-            SkillLevelModel newSkillLevel = new SkillLevelModel();
+            SkillLevelSqlModel newSkillLevel = new SkillLevelSqlModel();
             newSkillLevel.setSkill(skill);
-            newSkillLevel.setSkillLevel(skillLevel.getLevel());
+            newSkillLevel.setLevel(skillLevel.getLevel());
             newSkillLevel.setUnlocks(skillLevel.getUnlocks());
             newSkillLevel.setTotalExpRequired(skillLevel.getTotalExpRequired());
             skillLevelRepository.save(newSkillLevel);
@@ -133,32 +133,32 @@ public class HypixelResourceTask {
         }
     }
 
-    private static CollectionModel updateCollection(ResourceCollectionsResponse.Collection collection, String key) throws SqlException {
-        CollectionModel existingCollection = collectionRepository.findFirstOrNullCached(
-                CollectionModel::getKey, key
+    private static CollectionSqlModel updateCollection(ResourceCollectionsResponse.Collection collection, String key) throws SqlException {
+        CollectionSqlModel existingCollection = collectionRepository.findFirstOrNullCached(
+                CollectionSqlModel::getKey, key
         );
         if (existingCollection != null) {
-            if (!(equalsWithNull(existingCollection.getName(), collection.getName()))) {
+            if (!(equalsWithNull(existingCollection.getSkill().getName(), collection.getName()))) {
                 existingCollection.setName(collection.getName());
                 collectionRepository.update(existingCollection);
                 collectionRepository.refreshItems();
             }
             return existingCollection;
         } else {
-            CollectionModel newCollection = new CollectionModel();
+            CollectionSqlModel newCollection = new CollectionSqlModel();
             newCollection.setKey(key);
             newCollection.setName(collection.getName());
             long id = collectionRepository.save(newCollection);
             collectionRepository.refreshItems();
-            return collectionRepository.findFirstOrNullCached(CollectionModel::getId, id);
+            return collectionRepository.findFirstOrNullCached(CollectionSqlModel::getId, id);
         }
     }
 
-    private static CollectionItemModel updateCollectionItem(ResourceCollectionsResponse.CollectionItem collectionItem, String key, CollectionModel collection) throws SqlException {
+    private static CollectionItemSqlModel updateCollectionItem(ResourceCollectionsResponse.CollectionItem collectionItem, String key, CollectionSqlModel collection) throws SqlException {
         @SuppressWarnings({"unchecked"}) // Doesn't matter because findFirstOrNull uses generics
-        CollectionItemModel existingCollectionItem = collectionItemRepository.findFirstOrNullCached(
-                Pair.of(CollectionItemModel::getCollection, collection),
-                Pair.of(CollectionItemModel::getItemKey, key)
+        CollectionItemSqlModel existingCollectionItem = collectionItemRepository.findFirstOrNullCached(
+                Pair.of(CollectionItemSqlModel::getCollection, collection),
+                Pair.of(CollectionItemSqlModel::getItem, key)
         );
         if (existingCollectionItem != null) {
             if (!(equalsWithNull(existingCollectionItem.getName(), collectionItem.getName())
@@ -171,22 +171,22 @@ public class HypixelResourceTask {
             }
             return existingCollectionItem;
         } else {
-            CollectionItemModel newCollectionItem = new CollectionItemModel();
+            CollectionItemSqlModel newCollectionItem = new CollectionItemSqlModel();
             newCollectionItem.setItemKey(key);
             newCollectionItem.setCollection(collection);
             newCollectionItem.setName(collectionItem.getName());
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
             long id = collectionItemRepository.save(newCollectionItem);
             collectionItemRepository.refreshItems();
-            return collectionItemRepository.findFirstOrNullCached(CollectionItemModel::getId, id);
+            return collectionItemRepository.findFirstOrNullCached(CollectionItemSqlModel::getId, id);
         }
     }
 
-    private static void updateCollectionTier(ResourceCollectionsResponse.CollectionTier collectionTier, CollectionItemModel collectionItem) throws SqlException {
+    private static void updateCollectionTier(ResourceCollectionsResponse.CollectionTier collectionTier, CollectionItemSqlModel collectionItem) throws SqlException {
         @SuppressWarnings({"unchecked"}) // Doesn't matter because findFirstOrNull uses generics
-        CollectionItemTierModel existingCollectionTier = collectionItemTierRepository.findFirstOrNullCached(
-                Pair.of(CollectionItemTierModel::getCollectionItem, collectionItem),
-                Pair.of(CollectionItemTierModel::getTier, collectionTier.getTier())
+        CollectionItemTierSqlModel existingCollectionTier = collectionItemTierRepository.findFirstOrNullCached(
+                Pair.of(CollectionItemTierSqlModel::getCollectionItem, collectionItem),
+                Pair.of(CollectionItemTierSqlModel::getTier, collectionTier.getTier())
         );
         if (existingCollectionTier != null) {
             if (!(equalsWithNull(existingCollectionTier.getUnlocks(), collectionTier.getUnlocks())
@@ -198,7 +198,7 @@ public class HypixelResourceTask {
                 collectionItemTierRepository.refreshItems();
             }
         } else {
-            CollectionItemTierModel newCollectionTier = new CollectionItemTierModel();
+            CollectionItemTierSqlModel newCollectionTier = new CollectionItemTierSqlModel();
             newCollectionTier.setCollectionItem(collectionItem);
             newCollectionTier.setTier(collectionTier.getTier());
             newCollectionTier.setUnlocks(collectionTier.getUnlocks());
@@ -210,32 +210,32 @@ public class HypixelResourceTask {
 
     @SuppressWarnings("unchecked")
     public static void updateItem(ResourceItemsResponse.Item item) throws SqlException {
-        ItemModel existingItem = itemRepository.findFirstOrNullCached(
-                ItemModel::getItemId, item.getId()
+        ItemSqlModel existingItem = itemRepository.findFirstOrNullCached(
+                ItemSqlModel::getItemId, item.getId()
         );
         Map<String, Object> requirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), HashMap.class);
         Map<String, Object> catacombsRequirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), HashMap.class);
         Map<String, Object> essence = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getEssence()), HashMap.class);
 
         if (item.getTier() != null) {
-            RarityModel existingRarity = rarityRepository.findFirstOrNullCached(
-                    Pair.of(RarityModel::getName, item.getTier()),
-                    Pair.of(RarityModel::isHasHypixelName, true)
+            RaritySqlModel existingRarity = rarityRepository.findFirstOrNullCached(
+                    Pair.of(RaritySqlModel::getName, item.getTier()),
+                    Pair.of(RaritySqlModel::isKeyValid, true)
             );
             if (existingRarity == null) {
-                RarityModel newRarity = new RarityModel();
+                RaritySqlModel newRarity = new RaritySqlModel();
                 newRarity.setName(item.getTier().substring(0, 1).toUpperCase()
                         + item.getTier().substring(1).toLowerCase()
                 );
-                newRarity.setHasHypixelName(true);
+                newRarity.setKeyValid(true);
                 newRarity.setName(item.getTier());
                 rarityRepository.save(newRarity);
                 rarityRepository.refreshItems();
             }
         }
-        RarityModel rarity = rarityRepository.findFirstOrNullCached(
-                Pair.of(RarityModel::getName, item.getTier()),
-                Pair.of(RarityModel::isHasHypixelName, true)
+        RaritySqlModel rarity = rarityRepository.findFirstOrNullCached(
+                Pair.of(RaritySqlModel::getName, item.getTier()),
+                Pair.of(RaritySqlModel::isKeyValid, true)
         );
         if (existingItem != null) {
             if (!(equalsWithNull(existingItem.getName(), item.getName())
@@ -293,7 +293,7 @@ public class HypixelResourceTask {
                 itemRepository.refreshItems();
             }
         } else {
-            ItemModel newItem = new ItemModel();
+            ItemSqlModel newItem = new ItemSqlModel();
             newItem.setItemId(item.getId());
             newItem.setName(item.getName());
             newItem.setMaterial(item.getMaterial());
