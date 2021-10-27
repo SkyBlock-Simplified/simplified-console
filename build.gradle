@@ -52,7 +52,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'dev.sbs.datapuller.DataPuller'
+    mainClass = 'dev.sbs.updater.DatabaseUpdater'
 }
 
 test {
