@@ -7,8 +7,6 @@ import dev.sbs.api.model.sql.accessories.AccessoryRepository;
 import dev.sbs.api.model.sql.accessories.AccessorySqlModel;
 import dev.sbs.api.model.sql.items.ItemRepository;
 import dev.sbs.api.model.sql.items.ItemSqlModel;
-import dev.sbs.api.model.sql.items.itemtypes.ItemCategoryRepository;
-import dev.sbs.api.model.sql.items.itemtypes.ItemCategorySqlModel;
 import dev.sbs.api.model.sql.minions.MinionRepository;
 import dev.sbs.api.model.sql.minions.MinionSqlModel;
 import dev.sbs.api.model.sql.minions.miniontiers.MinionTierRepository;
@@ -26,11 +24,11 @@ import lombok.SneakyThrows;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("all")
 public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
     private static final RarityRepository rarityRepository = SimplifiedApi.getSqlRepository(RarityRepository.class);
     private static final ItemRepository itemRepository = SimplifiedApi.getSqlRepository(ItemRepository.class);
-    private static final ItemCategoryRepository itemCategoryRepository = SimplifiedApi.getSqlRepository(ItemCategoryRepository.class);
     private static final AccessoryRepository accessoryRepository = SimplifiedApi.getSqlRepository(AccessoryRepository.class);
     private static final MinionRepository minionRepository = SimplifiedApi.getSqlRepository(MinionRepository.class);
     private static final MinionTierRepository minionTierRepository = SimplifiedApi.getSqlRepository(MinionTierRepository.class);
@@ -39,14 +37,14 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
         super(resourceItemsResponse);
     }
 
-    @SuppressWarnings("unused")
     @Override
     public void process() {
         for (ResourceItemsResponse.Item itemEntry : super.getResourceResponse().getItems()) {
             RaritySqlModel rarity = updateRarity(itemEntry); // Update `rarities`
             ItemSqlModel item = updateItem(itemEntry); // Update `items`
-            ItemCategorySqlModel itemCategory = updateItemCategory(item); // Update `item_categories`
-            AccessorySqlModel accessory = updateAccessory(item); // Update `accessories`
+
+            if ("ACCESSORY".equals(item.getCategory()))
+                updateAccessory(item); // Update `accessories`
 
             if (StringUtil.isNotEmpty(item.getGenerator())) {
                 MinionSqlModel minion = updateMinion(item); // Update `minions`
@@ -94,29 +92,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             long id = accessoryRepository.save(newAccessory);
             accessoryRepository.refreshItems();
             return accessoryRepository.findFirstOrNullCached(AccessorySqlModel::getId, id);
-        }
-    }
-
-    @SneakyThrows
-    private static ItemCategorySqlModel updateItemCategory(ItemSqlModel item) {
-        ItemCategorySqlModel existingItemCategory = itemCategoryRepository.findFirstOrNullCached(ItemCategorySqlModel::getKey, item.getCategory());
-        String categoryName = WordUtil.capitalize(item.getCategory().replace("_", ""));
-
-        if (existingItemCategory != null) {
-            if (!equalsWithNull(existingItemCategory.getName(), categoryName)) {
-                existingItemCategory.setName(categoryName);
-                itemCategoryRepository.update(existingItemCategory);
-                itemCategoryRepository.refreshItems();
-            }
-
-            return existingItemCategory;
-        } else {
-            ItemCategorySqlModel newItemCategory = new ItemCategorySqlModel();
-            newItemCategory.setKey(item.getCategory());
-            newItemCategory.setName(categoryName);
-            long id = itemCategoryRepository.save(newItemCategory);
-            itemCategoryRepository.refreshItems();
-            return itemCategoryRepository.findFirstOrNullCached(ItemCategorySqlModel::getId, id);
         }
     }
 
@@ -169,7 +144,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @SneakyThrows
     private static RaritySqlModel updateRarity(ResourceItemsResponse.Item item) {
         if (item.getTier() != null) {
@@ -191,7 +165,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     @SneakyThrows
     private static ItemSqlModel updateItem(ResourceItemsResponse.Item item) {
         ItemSqlModel existingItem = itemRepository.findFirstOrNullCached(ItemSqlModel::getItemId, item.getId());
