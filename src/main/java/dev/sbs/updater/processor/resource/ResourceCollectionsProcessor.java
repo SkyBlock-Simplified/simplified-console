@@ -73,7 +73,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
         @SuppressWarnings({"unchecked"}) // Doesn't matter because findFirstOrNull uses generics
         CollectionItemSqlModel existingCollectionItem = collectionItemRepository.findFirstOrNullCached(
                 Pair.of(CollectionItemSqlModel::getCollection, collection),
-                Pair.of(CollectionItemSqlModel::getItem, key)
+                Pair.of(FilterFunction.combine(CollectionItemSqlModel::getItem, ItemSqlModel::getItemId), key)
         );
 
         if (existingCollectionItem != null) {
