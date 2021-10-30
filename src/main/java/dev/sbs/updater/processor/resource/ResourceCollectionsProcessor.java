@@ -3,16 +3,16 @@ package dev.sbs.updater.processor.resource;
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceCollectionsResponse;
 import dev.sbs.api.data.sql.function.FilterFunction;
-import dev.sbs.api.model.sql.collections.CollectionRepository;
-import dev.sbs.api.model.sql.collections.CollectionSqlModel;
-import dev.sbs.api.model.sql.collections.collectionitems.CollectionItemRepository;
-import dev.sbs.api.model.sql.collections.collectionitems.CollectionItemSqlModel;
-import dev.sbs.api.model.sql.collections.collectionitemtiers.CollectionItemTierRepository;
-import dev.sbs.api.model.sql.collections.collectionitemtiers.CollectionItemTierSqlModel;
-import dev.sbs.api.model.sql.items.ItemRepository;
-import dev.sbs.api.model.sql.items.ItemSqlModel;
-import dev.sbs.api.model.sql.skills.SkillRepository;
-import dev.sbs.api.model.sql.skills.SkillSqlModel;
+import dev.sbs.api.data.model.collections.CollectionSqlRepository;
+import dev.sbs.api.data.model.collections.CollectionSqlModel;
+import dev.sbs.api.data.model.collection_items.CollectionItemSqlRepository;
+import dev.sbs.api.data.model.collection_items.CollectionItemSqlModel;
+import dev.sbs.api.data.model.collection_item_tiers.CollectionItemTierSqlRepository;
+import dev.sbs.api.data.model.collection_item_tiers.CollectionItemTierSqlModel;
+import dev.sbs.api.data.model.items.ItemSqlRepository;
+import dev.sbs.api.data.model.items.ItemSqlModel;
+import dev.sbs.api.data.model.skills.SkillSqlRepository;
+import dev.sbs.api.data.model.skills.SkillSqlModel;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 import lombok.SneakyThrows;
@@ -21,11 +21,11 @@ import java.util.Map;
 
 public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsResponse> {
 
-    private static final CollectionRepository collectionRepository = SimplifiedApi.getSqlRepository(CollectionRepository.class);
-    private static final CollectionItemRepository collectionItemRepository = SimplifiedApi.getSqlRepository(CollectionItemRepository.class);
-    private static final CollectionItemTierRepository collectionItemTierRepository = SimplifiedApi.getSqlRepository(CollectionItemTierRepository.class);
-    private static final SkillRepository skillRepository = SimplifiedApi.getSqlRepository(SkillRepository.class);
-    private static final ItemRepository itemRepository = SimplifiedApi.getSqlRepository(ItemRepository.class);
+    private static final CollectionSqlRepository collectionRepository = SimplifiedApi.getSqlRepository(CollectionSqlRepository.class);
+    private static final CollectionItemSqlRepository collectionItemRepository = SimplifiedApi.getSqlRepository(CollectionItemSqlRepository.class);
+    private static final CollectionItemTierSqlRepository collectionItemTierRepository = SimplifiedApi.getSqlRepository(CollectionItemTierSqlRepository.class);
+    private static final SkillSqlRepository skillRepository = SimplifiedApi.getSqlRepository(SkillSqlRepository.class);
+    private static final ItemSqlRepository itemRepository = SimplifiedApi.getSqlRepository(ItemSqlRepository.class);
 
     public ResourceCollectionsProcessor(ResourceCollectionsResponse resourceResponse) {
         super(resourceResponse);

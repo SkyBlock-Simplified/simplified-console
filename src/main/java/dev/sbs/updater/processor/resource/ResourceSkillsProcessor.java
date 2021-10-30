@@ -2,10 +2,10 @@ package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceSkillsResponse;
-import dev.sbs.api.model.sql.skills.SkillRepository;
-import dev.sbs.api.model.sql.skills.SkillSqlModel;
-import dev.sbs.api.model.sql.skills.skilllevels.SkillLevelRepository;
-import dev.sbs.api.model.sql.skills.skilllevels.SkillLevelSqlModel;
+import dev.sbs.api.data.model.skills.SkillSqlRepository;
+import dev.sbs.api.data.model.skills.SkillSqlModel;
+import dev.sbs.api.data.model.skill_levels.SkillLevelSqlRepository;
+import dev.sbs.api.data.model.skill_levels.SkillLevelSqlModel;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 import lombok.SneakyThrows;
@@ -14,8 +14,8 @@ import java.util.Map;
 
 public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
 
-    private static final SkillRepository skillRepository = SimplifiedApi.getSqlRepository(SkillRepository.class);
-    private static final SkillLevelRepository skillLevelRepository = SimplifiedApi.getSqlRepository(SkillLevelRepository.class);
+    private static final SkillSqlRepository skillRepository = SimplifiedApi.getSqlRepository(SkillSqlRepository.class);
+    private static final SkillLevelSqlRepository skillLevelRepository = SimplifiedApi.getSqlRepository(SkillLevelSqlRepository.class);
 
     public ResourceSkillsProcessor(ResourceSkillsResponse resourceResponse) {
         super(resourceResponse);
