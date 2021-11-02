@@ -77,10 +77,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
         );
 
         if (existingCollectionItem != null) {
-            if (!(equalsWithNull(existingCollectionItem.getName(), collectionItem.getName())
-                    && existingCollectionItem.getMaxTiers() == collectionItem.getMaxTiers()
-            )) {
-                existingCollectionItem.setName(collectionItem.getName());
+            if (!(existingCollectionItem.getMaxTiers() == collectionItem.getMaxTiers())) {
                 existingCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
                 collectionItemRepository.update(existingCollectionItem);
                 collectionItemRepository.refreshItems();
@@ -90,9 +87,8 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
         } else {
             CollectionItemSqlModel newCollectionItem = new CollectionItemSqlModel();
             ItemSqlModel item = itemRepository.findFirstOrNullCached(ItemSqlModel::getItemId, key);
-            newCollectionItem.setItem(item);
             newCollectionItem.setCollection(collection);
-            newCollectionItem.setName(collectionItem.getName());
+            newCollectionItem.setItem(item);
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
             long id = collectionItemRepository.save(newCollectionItem);
             collectionItemRepository.refreshItems();

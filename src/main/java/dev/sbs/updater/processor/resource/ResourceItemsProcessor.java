@@ -70,9 +70,9 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
         if (existingAccessory != null) {
             if (!stats.equals(existingAccessory.getEffects())
-                    && !equalsWithNull(item, existingAccessory.getItem())
-                    && !equalsWithNull(item.getRarity(), existingAccessory.getRarity())
-                    && !equalsWithNull(item.getName(), existingAccessory.getName())
+                    || !equalsWithNull(item, existingAccessory.getItem())
+                    || !equalsWithNull(item.getRarity(), existingAccessory.getRarity())
+                    || !equalsWithNull(item.getName(), existingAccessory.getName())
             ) {
                 existingAccessory.setItem(item);
                 existingAccessory.setRarity(item.getRarity());
