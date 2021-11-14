@@ -2,17 +2,17 @@ package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceItemsResponse;
-import dev.sbs.api.data.sql.function.FilterFunction;
-import dev.sbs.api.data.model.accessories.AccessorySqlRepository;
 import dev.sbs.api.data.model.accessories.AccessorySqlModel;
-import dev.sbs.api.data.model.items.ItemSqlRepository;
+import dev.sbs.api.data.model.accessories.AccessorySqlRepository;
 import dev.sbs.api.data.model.items.ItemSqlModel;
-import dev.sbs.api.data.model.minions.MinionSqlRepository;
-import dev.sbs.api.data.model.minions.MinionSqlModel;
-import dev.sbs.api.data.model.minion_tiers.MinionTierSqlRepository;
+import dev.sbs.api.data.model.items.ItemSqlRepository;
 import dev.sbs.api.data.model.minion_tiers.MinionTierSqlModel;
-import dev.sbs.api.data.model.rarities.RaritySqlRepository;
+import dev.sbs.api.data.model.minion_tiers.MinionTierSqlRepository;
+import dev.sbs.api.data.model.minions.MinionSqlModel;
+import dev.sbs.api.data.model.minions.MinionSqlRepository;
 import dev.sbs.api.data.model.rarities.RaritySqlModel;
+import dev.sbs.api.data.model.rarities.RaritySqlRepository;
+import dev.sbs.api.data.sql.function.FilterFunction;
 import dev.sbs.api.util.concurrent.Concurrent;
 import dev.sbs.api.util.concurrent.ConcurrentMap;
 import dev.sbs.api.util.helper.StringUtil;
@@ -55,7 +55,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
     @SneakyThrows
     private static AccessorySqlModel updateAccessory(ItemSqlModel item) {
-        AccessorySqlModel existingAccessory = accessoryRepository.findFirstOrNullCached(FilterFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
+        AccessorySqlModel existingAccessory = accessoryRepository.findFirstOrNull(FilterFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
 
         ConcurrentMap<String, Object> stats = Concurrent.newMap(item.getStats());
         stats.forEach(stat -> { // TODO: Automate this using stats table?
@@ -91,13 +91,13 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newAccessory.setEffects(stats);
             long id = accessoryRepository.save(newAccessory);
             accessoryRepository.refreshItems();
-            return accessoryRepository.findFirstOrNullCached(AccessorySqlModel::getId, id);
+            return accessoryRepository.findFirstOrNull(AccessorySqlModel::getId, id);
         }
     }
 
     @SneakyThrows
     private static MinionSqlModel updateMinion(ItemSqlModel item) {
-        MinionSqlModel existingMinion = minionRepository.findFirstOrNullCached(MinionSqlModel::getKey, item.getGenerator());
+        MinionSqlModel existingMinion = minionRepository.findFirstOrNull(MinionSqlModel::getKey, item.getGenerator());
         String minionName = WordUtil.capitalize(item.getGenerator().replace("_", ""));
 
         if (existingMinion != null) {
@@ -115,13 +115,13 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinion.setCollection(null);
             long id = minionRepository.save(newMinion);
             minionRepository.refreshItems();
-            return minionRepository.findFirstOrNullCached(MinionSqlModel::getId, id);
+            return minionRepository.findFirstOrNull(MinionSqlModel::getId, id);
         }
     }
 
     @SneakyThrows
     private static MinionTierSqlModel updateMinionTier(MinionSqlModel minion, ItemSqlModel item) {
-        MinionTierSqlModel existingMinionTier = minionTierRepository.findFirstOrNullCached(FilterFunction.combine(MinionTierSqlModel::getMinion, MinionSqlModel::getKey), minion.getKey());
+        MinionTierSqlModel existingMinionTier = minionTierRepository.findFirstOrNull(FilterFunction.combine(MinionTierSqlModel::getMinion, MinionSqlModel::getKey), minion.getKey());
 
         if (existingMinionTier != null) {
             if (!equalsWithNull(existingMinionTier.getMinion(), minion)
@@ -140,14 +140,14 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinionTier.setItem(item);
             long id = minionTierRepository.save(newMinionTier);
             minionTierRepository.refreshItems();
-            return minionTierRepository.findFirstOrNullCached(MinionTierSqlModel::getId, id);
+            return minionTierRepository.findFirstOrNull(MinionTierSqlModel::getId, id);
         }
     }
 
     @SneakyThrows
     private static RaritySqlModel updateRarity(ResourceItemsResponse.Item item) {
         if (item.getTier() != null) {
-            RaritySqlModel existingRarity = rarityRepository.findFirstOrNullCached(Pair.of(RaritySqlModel::getKey, item.getTier()));
+            RaritySqlModel existingRarity = rarityRepository.findFirstOrNull(Pair.of(RaritySqlModel::getKey, item.getTier()));
 
             if (existingRarity == null) {
                 RaritySqlModel newRarity = new RaritySqlModel();
@@ -156,7 +156,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 newRarity.setKeyValid(true);
                 long id = rarityRepository.save(newRarity);
                 rarityRepository.refreshItems();
-                return rarityRepository.findFirstOrNullCached(RaritySqlModel::getId, id);
+                return rarityRepository.findFirstOrNull(RaritySqlModel::getId, id);
             }
 
             return existingRarity;
@@ -167,12 +167,12 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
     @SneakyThrows
     private static ItemSqlModel updateItem(ResourceItemsResponse.Item item) {
-        ItemSqlModel existingItem = itemRepository.findFirstOrNullCached(ItemSqlModel::getItemId, item.getId());
+        ItemSqlModel existingItem = itemRepository.findFirstOrNull(ItemSqlModel::getItemId, item.getId());
         Map<String, Object> requirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), HashMap.class);
         Map<String, Object> catacombsRequirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), HashMap.class);
         Map<String, Object> essence = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getEssence()), HashMap.class);
         
-        RaritySqlModel rarity = rarityRepository.findFirstOrNullCached(
+        RaritySqlModel rarity = rarityRepository.findFirstOrNull(
                 Pair.of(RaritySqlModel::getName, item.getTier()),
                 Pair.of(RaritySqlModel::isKeyValid, true)
         );
@@ -264,7 +264,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newItem.setCategory(item.getCategory());
             long id = itemRepository.save(newItem);
             itemRepository.refreshItems();
-            return itemRepository.findFirstOrNullCached(ItemSqlModel::getId, id);
+            return itemRepository.findFirstOrNull(ItemSqlModel::getId, id);
         }
     }
 

@@ -2,10 +2,10 @@ package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceSkillsResponse;
-import dev.sbs.api.data.model.skills.SkillSqlRepository;
-import dev.sbs.api.data.model.skills.SkillSqlModel;
-import dev.sbs.api.data.model.skill_levels.SkillLevelSqlRepository;
 import dev.sbs.api.data.model.skill_levels.SkillLevelSqlModel;
+import dev.sbs.api.data.model.skill_levels.SkillLevelSqlRepository;
+import dev.sbs.api.data.model.skills.SkillSqlModel;
+import dev.sbs.api.data.model.skills.SkillSqlRepository;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 import lombok.SneakyThrows;
@@ -33,7 +33,7 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
 
     @SneakyThrows
     private static SkillSqlModel updateSkill(ResourceSkillsResponse.Skill skill, String key) {
-        SkillSqlModel existingSkill = skillRepository.findFirstOrNullCached(SkillSqlModel::getKey, key);
+        SkillSqlModel existingSkill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, key);
 
         if (existingSkill != null) {
             if (!(equalsWithNull(existingSkill.getName(), skill.getName())
@@ -56,14 +56,14 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
             newSkill.setMaxLevel(skill.getMaxLevel());
             long id = skillRepository.save(newSkill);
             skillRepository.refreshItems();
-            return skillRepository.findFirstOrNullCached(SkillSqlModel::getId, id);
+            return skillRepository.findFirstOrNull(SkillSqlModel::getId, id);
         }
     }
 
     @SneakyThrows
     private static void updateSkillLevel(ResourceSkillsResponse.SkillLevel skillLevel, SkillSqlModel skill) {
         @SuppressWarnings({"unchecked"}) // Doesn't matter because findFirstOrNull uses generics
-        SkillLevelSqlModel existingSkillLevel = skillLevelRepository.findFirstOrNullCached(
+        SkillLevelSqlModel existingSkillLevel = skillLevelRepository.findFirstOrNull(
                 Pair.of(SkillLevelSqlModel::getSkill, skill),
                 Pair.of(SkillLevelSqlModel::getLevel, skillLevel.getLevel())
         );
