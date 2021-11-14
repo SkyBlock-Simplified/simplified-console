@@ -44,7 +44,6 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
                 existingSkill.setDescription(skill.getDescription());
                 existingSkill.setMaxLevel(skill.getMaxLevel());
                 skillRepository.update(existingSkill);
-                skillRepository.refreshItems();
             }
 
             return existingSkill;
@@ -55,7 +54,6 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
             newSkill.setDescription(skill.getDescription());
             newSkill.setMaxLevel(skill.getMaxLevel());
             long id = skillRepository.save(newSkill);
-            skillRepository.refreshItems();
             return skillRepository.findFirstOrNull(SkillSqlModel::getId, id);
         }
     }
@@ -74,7 +72,6 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
                 existingSkillLevel.setUnlocks(skillLevel.getUnlocks());
                 existingSkillLevel.setTotalExpRequired(skillLevel.getTotalExpRequired());
                 skillLevelRepository.update(existingSkillLevel);
-                skillLevelRepository.refreshItems();
             }
         } else {
             SkillLevelSqlModel newSkillLevel = new SkillLevelSqlModel();
@@ -83,7 +80,6 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
             newSkillLevel.setUnlocks(skillLevel.getUnlocks());
             newSkillLevel.setTotalExpRequired(skillLevel.getTotalExpRequired());
             skillLevelRepository.save(newSkillLevel);
-            skillLevelRepository.refreshItems();
         }
     }
 

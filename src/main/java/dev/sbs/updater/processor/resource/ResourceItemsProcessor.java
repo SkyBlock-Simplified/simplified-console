@@ -79,7 +79,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingAccessory.setName(item.getName());
                 existingAccessory.setEffects(stats);
                 accessoryRepository.update(existingAccessory);
-                accessoryRepository.refreshItems();
             }
 
             return existingAccessory;
@@ -90,7 +89,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newAccessory.setName(item.getName());
             newAccessory.setEffects(stats);
             long id = accessoryRepository.save(newAccessory);
-            accessoryRepository.refreshItems();
             return accessoryRepository.findFirstOrNull(AccessorySqlModel::getId, id);
         }
     }
@@ -104,7 +102,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             if (!equalsWithNull(existingMinion.getName(), minionName)) {
                 existingMinion.setName(minionName);
                 minionRepository.update(existingMinion);
-                minionRepository.refreshItems();
             }
 
             return existingMinion;
@@ -114,7 +111,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinion.setName(minionName);
             newMinion.setCollection(null);
             long id = minionRepository.save(newMinion);
-            minionRepository.refreshItems();
             return minionRepository.findFirstOrNull(MinionSqlModel::getId, id);
         }
     }
@@ -130,7 +126,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingMinionTier.setMinion(minion);
                 existingMinionTier.setItem(item);
                 minionTierRepository.update(existingMinionTier);
-                minionTierRepository.refreshItems();
             }
 
             return existingMinionTier;
@@ -139,7 +134,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinionTier.setMinion(minion);
             newMinionTier.setItem(item);
             long id = minionTierRepository.save(newMinionTier);
-            minionTierRepository.refreshItems();
             return minionTierRepository.findFirstOrNull(MinionTierSqlModel::getId, id);
         }
     }
@@ -155,7 +149,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 newRarity.setName(WordUtil.capitalize(item.getTier()));
                 newRarity.setKeyValid(true);
                 long id = rarityRepository.save(newRarity);
-                rarityRepository.refreshItems();
                 return rarityRepository.findFirstOrNull(RaritySqlModel::getId, id);
             }
 
@@ -230,7 +223,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingItem.setPrivateIsland(item.getPrivateIsland());
                 existingItem.setCategory(item.getCategory());
                 itemRepository.update(existingItem);
-                itemRepository.refreshItems();
             }
             
             return existingItem;
@@ -263,7 +255,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newItem.setPrivateIsland(item.getPrivateIsland());
             newItem.setCategory(item.getCategory());
             long id = itemRepository.save(newItem);
-            itemRepository.refreshItems();
             return itemRepository.findFirstOrNull(ItemSqlModel::getId, id);
         }
     }

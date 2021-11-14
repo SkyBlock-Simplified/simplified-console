@@ -54,7 +54,6 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
                 SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, collection.getName());
                 existingCollection.setSkill(skill);
                 collectionRepository.update(existingCollection);
-                collectionRepository.refreshItems();
             }
 
             return existingCollection;
@@ -63,7 +62,6 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, key);
             newCollection.setSkill(skill);
             long id = collectionRepository.save(newCollection);
-            collectionRepository.refreshItems();
             return collectionRepository.findFirstOrNull(CollectionSqlModel::getId, id);
         }
     }
@@ -80,7 +78,6 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             if (!(existingCollectionItem.getMaxTiers() == collectionItem.getMaxTiers())) {
                 existingCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
                 collectionItemRepository.update(existingCollectionItem);
-                collectionItemRepository.refreshItems();
             }
 
             return existingCollectionItem;
@@ -91,7 +88,6 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionItem.setItem(item);
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
             long id = collectionItemRepository.save(newCollectionItem);
-            collectionItemRepository.refreshItems();
             return collectionItemRepository.findFirstOrNull(CollectionItemSqlModel::getId, id);
         }
     }
@@ -111,7 +107,6 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
                 existingCollectionTier.setUnlocks(collectionTier.getUnlocks());
                 existingCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
                 collectionItemTierRepository.update(existingCollectionTier);
-                collectionItemTierRepository.refreshItems();
             }
         } else {
             CollectionItemTierSqlModel newCollectionTier = new CollectionItemTierSqlModel();
@@ -120,7 +115,6 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionTier.setUnlocks(collectionTier.getUnlocks());
             newCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
             collectionItemTierRepository.save(newCollectionTier);
-            collectionItemTierRepository.refreshItems();
         }
     }
 
