@@ -2,16 +2,16 @@ package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceItemsResponse;
-import dev.sbs.api.data.model.accessories.AccessorySqlModel;
-import dev.sbs.api.data.model.accessories.AccessorySqlRepository;
-import dev.sbs.api.data.model.items.ItemSqlModel;
-import dev.sbs.api.data.model.items.ItemSqlRepository;
-import dev.sbs.api.data.model.minion_tiers.MinionTierSqlModel;
-import dev.sbs.api.data.model.minion_tiers.MinionTierSqlRepository;
-import dev.sbs.api.data.model.minions.MinionSqlModel;
-import dev.sbs.api.data.model.minions.MinionSqlRepository;
-import dev.sbs.api.data.model.rarities.RaritySqlModel;
-import dev.sbs.api.data.model.rarities.RaritySqlRepository;
+import dev.sbs.api.data.model.skyblock.accessories.AccessorySqlModel;
+import dev.sbs.api.data.model.skyblock.accessories.AccessorySqlRepository;
+import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
+import dev.sbs.api.data.model.skyblock.items.ItemSqlRepository;
+import dev.sbs.api.data.model.skyblock.minion_tiers.MinionTierSqlModel;
+import dev.sbs.api.data.model.skyblock.minion_tiers.MinionTierSqlRepository;
+import dev.sbs.api.data.model.skyblock.minions.MinionSqlModel;
+import dev.sbs.api.data.model.skyblock.minions.MinionSqlRepository;
+import dev.sbs.api.data.model.skyblock.rarities.RaritySqlModel;
+import dev.sbs.api.data.model.skyblock.rarities.RaritySqlRepository;
 import dev.sbs.api.data.sql.function.FilterFunction;
 import dev.sbs.api.util.concurrent.Concurrent;
 import dev.sbs.api.util.concurrent.ConcurrentMap;
@@ -27,11 +27,11 @@ import java.util.Map;
 @SuppressWarnings("all")
 public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
-    private static final RaritySqlRepository rarityRepository = SimplifiedApi.getSqlRepository(RaritySqlRepository.class);
-    private static final ItemSqlRepository itemRepository = SimplifiedApi.getSqlRepository(ItemSqlRepository.class);
-    private static final AccessorySqlRepository accessoryRepository = SimplifiedApi.getSqlRepository(AccessorySqlRepository.class);
-    private static final MinionSqlRepository minionRepository = SimplifiedApi.getSqlRepository(MinionSqlRepository.class);
-    private static final MinionTierSqlRepository minionTierRepository = SimplifiedApi.getSqlRepository(MinionTierSqlRepository.class);
+    private static final RaritySqlRepository rarityRepository = (RaritySqlRepository) SimplifiedApi.getRepositoryOf(RaritySqlModel.class);
+    private static final ItemSqlRepository itemRepository = (ItemSqlRepository) SimplifiedApi.getRepositoryOf(ItemSqlModel.class);
+    private static final AccessorySqlRepository accessoryRepository = (AccessorySqlRepository) SimplifiedApi.getRepositoryOf(AccessorySqlModel.class);
+    private static final MinionSqlRepository minionRepository = (MinionSqlRepository) SimplifiedApi.getRepositoryOf(MinionSqlModel.class);
+    private static final MinionTierSqlRepository minionTierRepository = (MinionTierSqlRepository) SimplifiedApi.getRepositoryOf(MinionTierSqlModel.class);
 
     public ResourceItemsProcessor(ResourceItemsResponse resourceItemsResponse) {
         super(resourceItemsResponse);

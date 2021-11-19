@@ -2,15 +2,16 @@ package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceCollectionsResponse;
-import dev.sbs.api.data.Repository;
-import dev.sbs.api.data.model.collection_item_tiers.CollectionItemTierSqlModel;
-import dev.sbs.api.data.model.collection_item_tiers.CollectionItemTierSqlRepository;
-import dev.sbs.api.data.model.collection_items.CollectionItemSqlModel;
-import dev.sbs.api.data.model.collection_items.CollectionItemSqlRepository;
-import dev.sbs.api.data.model.collections.CollectionSqlModel;
-import dev.sbs.api.data.model.collections.CollectionSqlRepository;
-import dev.sbs.api.data.model.items.ItemSqlModel;
-import dev.sbs.api.data.model.skills.SkillSqlModel;
+import dev.sbs.api.data.model.skyblock.collection_item_tiers.CollectionItemTierSqlModel;
+import dev.sbs.api.data.model.skyblock.collection_item_tiers.CollectionItemTierSqlRepository;
+import dev.sbs.api.data.model.skyblock.collection_items.CollectionItemSqlModel;
+import dev.sbs.api.data.model.skyblock.collection_items.CollectionItemSqlRepository;
+import dev.sbs.api.data.model.skyblock.collections.CollectionSqlModel;
+import dev.sbs.api.data.model.skyblock.collections.CollectionSqlRepository;
+import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
+import dev.sbs.api.data.model.skyblock.items.ItemSqlRepository;
+import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
+import dev.sbs.api.data.model.skyblock.skills.SkillSqlRepository;
 import dev.sbs.api.data.sql.function.FilterFunction;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
@@ -20,11 +21,11 @@ import java.util.Map;
 
 public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsResponse> {
 
-    private static final Repository<CollectionSqlModel> collectionRepository = SimplifiedApi.getRepositoryOf(CollectionSqlModel.class);
-    private static final Repository<CollectionItemSqlModel> collectionItemRepository = SimplifiedApi.getRepositoryOf(CollectionItemSqlModel.class);
-    private static final Repository<CollectionItemTierSqlModel> collectionItemTierRepository = SimplifiedApi.getRepositoryOf(CollectionItemTierSqlModel.class);
-    private static final Repository<SkillSqlModel> skillRepository = SimplifiedApi.getRepositoryOf(SkillSqlModel.class);
-    private static final Repository<ItemSqlModel> itemRepository = SimplifiedApi.getRepositoryOf(ItemSqlModel.class);
+    private static final CollectionSqlRepository collectionRepository = (CollectionSqlRepository) SimplifiedApi.getRepositoryOf(CollectionSqlModel.class);
+    private static final CollectionItemSqlRepository collectionItemRepository = (CollectionItemSqlRepository) SimplifiedApi.getRepositoryOf(CollectionItemSqlModel.class);
+    private static final CollectionItemTierSqlRepository collectionItemTierRepository = (CollectionItemTierSqlRepository) SimplifiedApi.getRepositoryOf(CollectionItemTierSqlModel.class);
+    private static final SkillSqlRepository skillRepository = (SkillSqlRepository) SimplifiedApi.getRepositoryOf(SkillSqlModel.class);
+    private static final ItemSqlRepository itemRepository = (ItemSqlRepository) SimplifiedApi.getRepositoryOf(ItemSqlModel.class);
 
     public ResourceCollectionsProcessor(ResourceCollectionsResponse resourceResponse) {
         super(resourceResponse);
@@ -52,7 +53,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             if (!(equalsWithNull(existingCollection.getSkill().getName(), collection.getName()))) {
                 SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, collection.getName());
                 existingCollection.setSkill(skill);
-                ((CollectionSqlRepository) collectionRepository).update(existingCollection);
+                collectionRepository.update(existingCollection);
             }
 
             return existingCollection;
@@ -60,7 +61,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             CollectionSqlModel newCollection = new CollectionSqlModel();
             SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, key);
             newCollection.setSkill(skill);
-            long id = ((CollectionSqlRepository) collectionRepository).save(newCollection);
+            long id = collectionRepository.save(newCollection);
             return collectionRepository.findFirstOrNull(CollectionSqlModel::getId, id);
         }
     }
@@ -76,7 +77,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
         if (existingCollectionItem != null) {
             if (!(existingCollectionItem.getMaxTiers() == collectionItem.getMaxTiers())) {
                 existingCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
-                ((CollectionItemSqlRepository) collectionItemRepository).update(existingCollectionItem);
+                collectionItemRepository.update(existingCollectionItem);
             }
 
             return existingCollectionItem;
@@ -86,7 +87,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionItem.setCollection(collection);
             newCollectionItem.setItem(item);
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
-            long id = ((CollectionItemSqlRepository) collectionItemRepository).save(newCollectionItem);
+            long id = collectionItemRepository.save(newCollectionItem);
             return collectionItemRepository.findFirstOrNull(CollectionItemSqlModel::getId, id);
         }
     }
@@ -105,7 +106,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             )) {
                 existingCollectionTier.setUnlocks(collectionTier.getUnlocks());
                 existingCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
-                ((CollectionItemTierSqlRepository) collectionItemTierRepository).update(existingCollectionTier);
+                collectionItemTierRepository.update(existingCollectionTier);
             }
         } else {
             CollectionItemTierSqlModel newCollectionTier = new CollectionItemTierSqlModel();
@@ -113,7 +114,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionTier.setTier(collectionTier.getTier());
             newCollectionTier.setUnlocks(collectionTier.getUnlocks());
             newCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
-            ((CollectionItemTierSqlRepository) collectionItemTierRepository).save(newCollectionTier);
+            collectionItemTierRepository.save(newCollectionTier);
         }
     }
 
