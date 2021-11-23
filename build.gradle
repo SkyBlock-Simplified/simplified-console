@@ -3,6 +3,9 @@ plugins {
     id 'application'
 }
 
+project.sourceCompatibility = "17"
+project.targetCompatibility = "17"
+
 group 'dev.sbs'
 version '0.1.0'
 
