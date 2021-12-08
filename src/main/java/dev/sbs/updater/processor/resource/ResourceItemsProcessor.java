@@ -57,7 +57,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
     private static AccessorySqlModel updateAccessory(ItemSqlModel item) {
         AccessorySqlModel existingAccessory = accessoryRepository.findFirstOrNull(FilterFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
 
-        ConcurrentMap<String, Object> stats = Concurrent.newMap(item.getStats());
+        ConcurrentMap<String, Double> stats = Concurrent.newMap(item.getStats());
         stats.forEach(stat -> { // TODO: Automate this using stats table?
             if (stat.getKey().equals("WALK_SPEED")) {
                 stats.put(stat.getKey().replace("WALK_", ""), stat.getValue());
