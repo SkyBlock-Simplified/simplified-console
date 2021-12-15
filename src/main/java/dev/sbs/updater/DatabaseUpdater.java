@@ -3,13 +3,8 @@ package dev.sbs.updater;
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.updater.tasks.HypixelResourceTask;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 public class DatabaseUpdater {
 
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(0);
     private static final Object exitLock = new Object();
 
     static {
@@ -17,7 +12,7 @@ public class DatabaseUpdater {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        scheduler.scheduleAtFixedRate(HypixelResourceTask::run, 0, HypixelResourceTask.getFixedRateMs(), TimeUnit.MILLISECONDS);
+        SimplifiedApi.getScheduler().scheduleAsync(HypixelResourceTask::run, 0, HypixelResourceTask.getFixedRateMs());
 
         synchronized (exitLock) {
             exitLock.wait();
