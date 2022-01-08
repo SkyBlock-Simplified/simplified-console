@@ -32,6 +32,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
     private static final AccessorySqlRepository accessoryRepository = (AccessorySqlRepository) SimplifiedApi.getRepositoryOf(AccessorySqlModel.class);
     private static final MinionSqlRepository minionRepository = (MinionSqlRepository) SimplifiedApi.getRepositoryOf(MinionSqlModel.class);
     private static final MinionTierSqlRepository minionTierRepository = (MinionTierSqlRepository) SimplifiedApi.getRepositoryOf(MinionTierSqlModel.class);
+    private static final RaritySqlModel commonRarityModel = SimplifiedApi.getRepositoryOf(RaritySqlModel.class).findFirstOrNull(RaritySqlModel::getKey, "COMMON");
 
     public ResourceItemsProcessor(ResourceItemsResponse resourceItemsResponse) {
         super(resourceItemsResponse);
@@ -164,11 +165,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
         Map<String, Object> requirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), HashMap.class);
         Map<String, Object> catacombsRequirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), HashMap.class);
         Map<String, Object> essence = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getEssence()), HashMap.class);
-        
-        RaritySqlModel rarity = rarityRepository.findFirstOrNull(
-                Pair.of(RaritySqlModel::getName, item.getTier()),
-                Pair.of(RaritySqlModel::isKeyValid, true)
-        );
+        RaritySqlModel rarity = rarityRepository.findFirst(Pair.of(RaritySqlModel::getName, item.getTier())).orElse(commonRarityModel);
         
         if (existingItem != null) {
             if (!(equalsWithNull(existingItem.getName(), item.getName())
