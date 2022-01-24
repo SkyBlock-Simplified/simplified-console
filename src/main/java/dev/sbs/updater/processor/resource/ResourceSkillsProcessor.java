@@ -8,7 +8,6 @@ import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlRepository;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
-import lombok.SneakyThrows;
 
 import java.util.Map;
 
@@ -24,25 +23,25 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
     @Override
     public void process() {
         for (Map.Entry<String, ResourceSkillsResponse.Skill> skillEntry : super.getResourceResponse().getSkills().entrySet()) {
-            SkillSqlModel skill = updateSkill(skillEntry.getValue(), skillEntry.getKey()); // Update `skills`
+            SkillSqlModel skill = this.updateSkill(skillEntry.getValue(), skillEntry.getKey()); // Update `skills`
 
             for (ResourceSkillsResponse.SkillLevel skillLevel : skillEntry.getValue().getLevels())
-                updateSkillLevel(skillLevel, skill); // Update `skilllevels`
+                this.updateSkillLevel(skillLevel, skill); // Update `skilllevels`
         }
     }
 
-    @SneakyThrows
-    private static SkillSqlModel updateSkill(ResourceSkillsResponse.Skill skill, String key) {
+    private SkillSqlModel updateSkill(ResourceSkillsResponse.Skill skill, String key) {
         SkillSqlModel existingSkill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, key);
 
         if (existingSkill != null) {
-            if (!(equalsWithNull(existingSkill.getName(), skill.getName())
-                    && equalsWithNull(existingSkill.getDescription(), skill.getDescription())
-                    && existingSkill.getMaxLevel() == skill.getMaxLevel()
-            )) {
+            if (!equalsWithNull(existingSkill.getName(), skill.getName())
+                    || !equalsWithNull(existingSkill.getDescription(), skill.getDescription())
+                    || existingSkill.getMaxLevel() != skill.getMaxLevel()
+            ) {
                 existingSkill.setName(skill.getName());
                 existingSkill.setDescription(skill.getDescription());
                 existingSkill.setMaxLevel(skill.getMaxLevel());
+                this.getLog().info("Updating existing skill {0}", existingSkill.getKey());
                 skillRepository.update(existingSkill);
             }
 
@@ -53,24 +52,22 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
             newSkill.setName(skill.getName());
             newSkill.setDescription(skill.getDescription());
             newSkill.setMaxLevel(skill.getMaxLevel());
+            this.getLog().info("Adding new skill {0}", newSkill.getKey());
             long id = skillRepository.save(newSkill);
             return skillRepository.findFirstOrNull(SkillSqlModel::getId, id);
         }
     }
 
-    @SneakyThrows
-    private static void updateSkillLevel(ResourceSkillsResponse.SkillLevel skillLevel, SkillSqlModel skill) {
-        @SuppressWarnings({"unchecked"}) // Doesn't matter because findFirstOrNull uses generics
+    private void updateSkillLevel(ResourceSkillsResponse.SkillLevel skillLevel, SkillSqlModel skill) {
         SkillLevelSqlModel existingSkillLevel = skillLevelRepository.findFirstOrNull(
                 Pair.of(SkillLevelSqlModel::getSkill, skill),
                 Pair.of(SkillLevelSqlModel::getLevel, skillLevel.getLevel())
         );
         if (existingSkillLevel != null) {
-            if (!(equalsWithNull(existingSkillLevel.getUnlocks(), skillLevel.getUnlocks())
-                    && existingSkillLevel.getTotalExpRequired() == skillLevel.getTotalExpRequired()
-            )) {
+            if (!equalsWithNull(existingSkillLevel.getUnlocks(), skillLevel.getUnlocks()) || existingSkillLevel.getTotalExpRequired() != skillLevel.getTotalExpRequired()) {
                 existingSkillLevel.setUnlocks(skillLevel.getUnlocks());
                 existingSkillLevel.setTotalExpRequired(skillLevel.getTotalExpRequired());
+                this.getLog().info("Updating existing skill level {0} for {1}", existingSkillLevel.getLevel(), existingSkillLevel.getSkill().getKey());
                 skillLevelRepository.update(existingSkillLevel);
             }
         } else {
@@ -79,6 +76,7 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
             newSkillLevel.setLevel(skillLevel.getLevel());
             newSkillLevel.setUnlocks(skillLevel.getUnlocks());
             newSkillLevel.setTotalExpRequired(skillLevel.getTotalExpRequired());
+            this.getLog().info("Adding new skill level {0} for {1}", newSkillLevel.getLevel(), newSkillLevel.getSkill().getKey());
             skillLevelRepository.save(newSkillLevel);
         }
     }

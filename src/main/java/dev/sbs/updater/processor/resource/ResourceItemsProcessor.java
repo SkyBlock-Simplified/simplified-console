@@ -1,5 +1,6 @@
 package dev.sbs.updater.processor.resource;
 
+import ch.qos.logback.classic.Level;
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceItemsResponse;
 import dev.sbs.api.data.model.skyblock.accessories.AccessorySqlModel;
@@ -14,12 +15,11 @@ import dev.sbs.api.data.model.skyblock.rarities.RaritySqlModel;
 import dev.sbs.api.data.model.skyblock.rarities.RaritySqlRepository;
 import dev.sbs.api.data.sql.function.FilterFunction;
 import dev.sbs.api.util.concurrent.Concurrent;
-import dev.sbs.api.util.concurrent.ConcurrentMap;
+import dev.sbs.api.util.concurrent.ConcurrentList;
 import dev.sbs.api.util.helper.StringUtil;
 import dev.sbs.api.util.helper.WordUtil;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
-import lombok.SneakyThrows;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +27,11 @@ import java.util.Map;
 @SuppressWarnings("all")
 public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
+    private static final ConcurrentList<Pair<String, String>> statRepair = Concurrent.newList(
+        Pair.of("WALK_SPEED", "SPEED"),
+        Pair.of("CRTICIAL_DAMAGE", "CRIT_DAMAGE"),
+        Pair.of("ATTACK_SPEED", "BONUS_ATTACK_SPEED")
+    );
     private static final RaritySqlRepository rarityRepository = (RaritySqlRepository) SimplifiedApi.getRepositoryOf(RaritySqlModel.class);
     private static final ItemSqlRepository itemRepository = (ItemSqlRepository) SimplifiedApi.getRepositoryOf(ItemSqlModel.class);
     private static final AccessorySqlRepository accessoryRepository = (AccessorySqlRepository) SimplifiedApi.getRepositoryOf(AccessorySqlModel.class);
@@ -41,36 +46,26 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
     @Override
     public void process() {
         for (ResourceItemsResponse.Item itemEntry : super.getResourceResponse().getItems()) {
-            RaritySqlModel rarity = updateRarity(itemEntry); // Update `rarities`
-            ItemSqlModel item = updateItem(itemEntry); // Update `items`
+            this.updateRarity(itemEntry); // Update `rarities`
+            ItemSqlModel item = this.updateItem(itemEntry); // Update `items`
 
             if ("ACCESSORY".equals(item.getCategory()))
-                updateAccessory(item); // Update `accessories`
+                this.updateAccessory(item); // Update `accessories`
 
             if (StringUtil.isNotEmpty(item.getGenerator())) {
-                MinionSqlModel minion = updateMinion(item); // Update `minions`
-                MinionTierSqlModel minionTier = updateMinionTier(minion, item); // Update `minion_tiers`
+                SimplifiedApi.getConfig().setLoggingLevel(Level.DEBUG);
+                MinionSqlModel minion = this.updateMinion(item); // Update `minions`
+                MinionTierSqlModel minionTier = this.updateMinionTier(minion, item); // Update `minion_tiers`
+                SimplifiedApi.getConfig().setLoggingLevel(Level.WARN);
             }
         }
     }
 
-    @SneakyThrows
-    private static AccessorySqlModel updateAccessory(ItemSqlModel item) {
+    private AccessorySqlModel updateAccessory(ItemSqlModel item) {
         AccessorySqlModel existingAccessory = accessoryRepository.findFirstOrNull(FilterFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
 
-        ConcurrentMap<String, Double> stats = Concurrent.newMap(item.getStats());
-        stats.forEach(stat -> { // TODO: Automate this using stats table?
-            if (stat.getKey().equals("WALK_SPEED")) {
-                stats.put(stat.getKey().replace("WALK_", ""), stat.getValue());
-                stats.remove(stat.getKey());
-            } else if (stat.getKey().contains("CRITICAL_")) {
-                stats.put(stat.getKey().replace("CRITICAL_", "CRIT_"), stat.getValue());
-                stats.remove(stat.getKey());
-            }
-        });
-
         if (existingAccessory != null) {
-            if (!stats.equals(existingAccessory.getEffects())
+            if (!item.getStats().equals(existingAccessory.getEffects())
                     || !equalsWithNull(item, existingAccessory.getItem())
                     || !equalsWithNull(item.getRarity(), existingAccessory.getRarity())
                     || !equalsWithNull(item.getName(), existingAccessory.getName())
@@ -78,7 +73,8 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingAccessory.setItem(item);
                 existingAccessory.setRarity(item.getRarity());
                 existingAccessory.setName(item.getName());
-                existingAccessory.setEffects(stats);
+                existingAccessory.setEffects(item.getStats());
+                this.getLog().info("Updating existing accessory {0}", existingAccessory.getItem().getItemId());
                 accessoryRepository.update(existingAccessory);
             }
 
@@ -88,20 +84,21 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newAccessory.setItem(item);
             newAccessory.setRarity(item.getRarity());
             newAccessory.setName(item.getName());
-            newAccessory.setEffects(stats);
+            newAccessory.setEffects(item.getStats());
+            this.getLog().info("Adding new accessory {0}", newAccessory.getItem().getItemId());
             long id = accessoryRepository.save(newAccessory);
             return accessoryRepository.findFirstOrNull(AccessorySqlModel::getId, id);
         }
     }
 
-    @SneakyThrows
-    private static MinionSqlModel updateMinion(ItemSqlModel item) {
+    private MinionSqlModel updateMinion(ItemSqlModel item) {
         MinionSqlModel existingMinion = minionRepository.findFirstOrNull(MinionSqlModel::getKey, item.getGenerator());
-        String minionName = WordUtil.capitalize(item.getGenerator().replace("_", ""));
+        String minionName = WordUtil.capitalizeFully(item.getGenerator().replace("_", " "));
 
         if (existingMinion != null) {
             if (!equalsWithNull(existingMinion.getName(), minionName)) {
                 existingMinion.setName(minionName);
+                this.getLog().info("Updating existing minion {0} : {1}", existingMinion.getKey(), minionName);
                 minionRepository.update(existingMinion);
             }
 
@@ -111,21 +108,25 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinion.setKey(item.getGenerator());
             newMinion.setName(minionName);
             newMinion.setCollection(null);
+            this.getLog().info("Adding new minion {0}", newMinion.getKey());
             long id = minionRepository.save(newMinion);
             return minionRepository.findFirstOrNull(MinionSqlModel::getId, id);
         }
     }
 
-    @SneakyThrows
-    private static MinionTierSqlModel updateMinionTier(MinionSqlModel minion, ItemSqlModel item) {
-        MinionTierSqlModel existingMinionTier = minionTierRepository.findFirstOrNull(FilterFunction.combine(MinionTierSqlModel::getMinion, MinionSqlModel::getKey), minion.getKey());
+    private MinionTierSqlModel updateMinionTier(MinionSqlModel minion, ItemSqlModel item) {
+        MinionTierSqlModel existingMinionTier = minionTierRepository.findFirstOrNull(
+            Pair.of(MinionTierSqlModel::getMinion, minion),
+            Pair.of(MinionTierSqlModel::getItem, item)
+        );
 
         if (existingMinionTier != null) {
             if (!equalsWithNull(existingMinionTier.getMinion(), minion)
-                    && !(equalsWithNull(existingMinionTier.getItem(), item))
+                    || !(equalsWithNull(existingMinionTier.getItem(), item))
             ) {
                 existingMinionTier.setMinion(minion);
                 existingMinionTier.setItem(item);
+                this.getLog().info("Updating existing minion tier {0}", existingMinionTier.getMinion().getKey());
                 minionTierRepository.update(existingMinionTier);
             }
 
@@ -134,14 +135,14 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             MinionTierSqlModel newMinionTier = new MinionTierSqlModel();
             newMinionTier.setMinion(minion);
             newMinionTier.setItem(item);
+            this.getLog().info("Adding new minion tier {0}", newMinionTier.getMinion().getKey());
             long id = minionTierRepository.save(newMinionTier);
             return minionTierRepository.findFirstOrNull(MinionTierSqlModel::getId, id);
         }
     }
 
-    @SneakyThrows
-    private static RaritySqlModel updateRarity(ResourceItemsResponse.Item item) {
-        if (item.getTier() != null) {
+    private RaritySqlModel updateRarity(ResourceItemsResponse.Item item) {
+        if (StringUtil.isNotEmpty(item.getTier())) {
             RaritySqlModel existingRarity = rarityRepository.findFirstOrNull(Pair.of(RaritySqlModel::getKey, item.getTier()));
 
             if (existingRarity == null) {
@@ -149,6 +150,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 newRarity.setKey(item.getTier());
                 newRarity.setName(WordUtil.capitalize(item.getTier()));
                 newRarity.setKeyValid(true);
+                this.getLog().info("Adding new rarity {0}", newRarity.getKey());
                 long id = rarityRepository.save(newRarity);
                 return rarityRepository.findFirstOrNull(RaritySqlModel::getId, id);
             }
@@ -159,41 +161,48 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
         return null;
     }
 
-    @SneakyThrows
-    private static ItemSqlModel updateItem(ResourceItemsResponse.Item item) {
+    private ItemSqlModel updateItem(ResourceItemsResponse.Item item) {
         ItemSqlModel existingItem = itemRepository.findFirstOrNull(ItemSqlModel::getItemId, item.getId());
         Map<String, Object> requirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), HashMap.class);
         Map<String, Object> catacombsRequirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), HashMap.class);
         Map<String, Object> essence = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getEssence()), HashMap.class);
         RaritySqlModel rarity = rarityRepository.findFirst(Pair.of(RaritySqlModel::getName, item.getTier())).orElse(commonRarityModel);
+
+        // Fix Stats
+        for (Pair<String, String> pair : statRepair) {
+            if (item.getStats().containsKey(pair.getLeft())) {
+                item.getStats().put(pair.getRight(), item.getStats().get(pair.getLeft()));
+                item.getStats().remove(pair.getLeft());
+            }
+        }
         
         if (existingItem != null) {
-            if (!(equalsWithNull(existingItem.getName(), item.getName())
-                    && equalsWithNull(existingItem.getMaterial(), item.getMaterial())
-                    && existingItem.getDurability() == item.getDurability()
-                    && equalsWithNull(existingItem.getSkin(), item.getSkin())
-                    && equalsWithNull(existingItem.getFurniture(), item.getFurniture())
-                    && equalsWithNull(existingItem.getRarity(), rarity)
-                    && equalsWithNull(existingItem.getItemId(), item.getId())
-                    && equalsWithNull(existingItem.getGenerator(), item.getGenerator())
-                    && existingItem.getGeneratorTier() == item.getGeneratorTier()
-                    && existingItem.isGlowing() == item.isGlowing()
-                    && equalsWithNull(existingItem.getStats(), item.getStats())
-                    && existingItem.getNpcSellPrice() == item.getNpcSellPrice()
-                    && existingItem.isUnstackable() == item.isUnstackable()
-                    && equalsWithNull(existingItem.getColor(), item.getColor())
-                    && equalsWithNull(existingItem.getTieredStats(), item.getTieredStats())
-                    && existingItem.getGearScore() == item.getGearScore()
-                    && equalsWithNull(existingItem.getRequirements(), requirements)
-                    && equalsWithNull(existingItem.getCatacombsRequirements(), catacombsRequirements)
-                    && equalsWithNull(existingItem.getEssence(), essence)
-                    && equalsWithNull(existingItem.getDescription(), item.getDescription())
-                    && existingItem.getAbilityDamageScaling() == item.getAbilityDamageScaling()
-                    && equalsWithNull(existingItem.getEnchantments(), item.getEnchantments())
-                    && equalsWithNull(existingItem.getCrystal(), item.getCrystal())
-                    && equalsWithNull(existingItem.getPrivateIsland(), item.getPrivateIsland())
-                    && equalsWithNull(existingItem.getCategory(), item.getCategory())
-            )) {
+            if (!equalsWithNull(existingItem.getName(), item.getName())
+                    || !equalsWithNull(existingItem.getMaterial(), item.getMaterial())
+                    || existingItem.getDurability() != item.getDurability()
+                    || !equalsWithNull(existingItem.getSkin(), item.getSkin())
+                    && !equalsWithNull(existingItem.getFurniture(), item.getFurniture())
+                    && !equalsWithNull(existingItem.getRarity(), rarity)
+                    && !equalsWithNull(existingItem.getItemId(), item.getId())
+                    && !equalsWithNull(existingItem.getGenerator(), item.getGenerator())
+                    && existingItem.getGeneratorTier() != item.getGeneratorTier()
+                    && existingItem.isGlowing() != item.isGlowing()
+                    && !equalsWithNull(existingItem.getStats(), item.getStats())
+                    && existingItem.getNpcSellPrice() != item.getNpcSellPrice()
+                    && existingItem.isUnstackable() != item.isUnstackable()
+                    && !equalsWithNull(existingItem.getColor(), item.getColor())
+                    && !equalsWithNull(existingItem.getTieredStats(), item.getTieredStats())
+                    && existingItem.getGearScore() != item.getGearScore()
+                    && !equalsWithNull(existingItem.getRequirements(), requirements)
+                    && !equalsWithNull(existingItem.getCatacombsRequirements(), catacombsRequirements)
+                    && !equalsWithNull(existingItem.getEssence(), essence)
+                    && !equalsWithNull(existingItem.getDescription(), item.getDescription())
+                    && existingItem.getAbilityDamageScaling() != item.getAbilityDamageScaling()
+                    && !equalsWithNull(existingItem.getEnchantments(), item.getEnchantments())
+                    && !equalsWithNull(existingItem.getCrystal(), item.getCrystal())
+                    && !equalsWithNull(existingItem.getPrivateIsland(), item.getPrivateIsland())
+                    && !equalsWithNull(existingItem.getCategory(), item.getCategory())
+            ) {
                 existingItem.setName(item.getName());
                 existingItem.setMaterial(item.getMaterial());
                 existingItem.setDurability(item.getDurability());
@@ -219,6 +228,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingItem.setCrystal(item.getCrystal());
                 existingItem.setPrivateIsland(item.getPrivateIsland());
                 existingItem.setCategory(item.getCategory());
+                this.getLog().info("Updating existing item {0}", existingItem.getItemId());
                 itemRepository.update(existingItem);
             }
             
@@ -251,6 +261,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newItem.setCrystal(item.getCrystal());
             newItem.setPrivateIsland(item.getPrivateIsland());
             newItem.setCategory(item.getCategory());
+            this.getLog().info("Adding new item {0}", newItem.getItemId());
             long id = itemRepository.save(newItem);
             return itemRepository.findFirstOrNull(ItemSqlModel::getId, id);
         }

@@ -15,7 +15,6 @@ import dev.sbs.api.data.model.skyblock.skills.SkillSqlRepository;
 import dev.sbs.api.data.sql.function.FilterFunction;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
-import lombok.SneakyThrows;
 
 import java.util.Map;
 
@@ -34,25 +33,25 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
     @Override
     public void process() {
         for (Map.Entry<String, ResourceCollectionsResponse.Collection> collectionEntry : super.getResourceResponse().getCollections().entrySet()) {
-            CollectionSqlModel collection = updateCollection(collectionEntry.getValue(), collectionEntry.getKey()); // Update `collections`
+            CollectionSqlModel collection = this.updateCollection(collectionEntry.getValue(), collectionEntry.getKey()); // Update `collections`
 
             for (Map.Entry<String, ResourceCollectionsResponse.CollectionItem> collectionItemEntry : collectionEntry.getValue().getItems().entrySet()) {
-                CollectionItemSqlModel collectionItem = updateCollectionItem(collectionItemEntry.getValue(), collectionItemEntry.getKey(), collection); // Update `collectionitems`
+                CollectionItemSqlModel collectionItem = this.updateCollectionItem(collectionItemEntry.getValue(), collectionItemEntry.getKey(), collection); // Update `collectionitems`
 
                 for (ResourceCollectionsResponse.CollectionTier collectionTier : collectionItemEntry.getValue().getTiers())
-                    updateCollectionTier(collectionTier, collectionItem); // Update `collectiontiers`
+                    this.updateCollectionTier(collectionTier, collectionItem); // Update `collectiontiers`
             }
         }
     }
 
-    @SneakyThrows
-    private static CollectionSqlModel updateCollection(ResourceCollectionsResponse.Collection collection, String key) {
+    private CollectionSqlModel updateCollection(ResourceCollectionsResponse.Collection collection, String key) {
         CollectionSqlModel existingCollection = collectionRepository.findFirstOrNull(FilterFunction.combine(CollectionSqlModel::getSkill, SkillSqlModel::getKey), key);
 
         if (existingCollection != null) {
             if (!(equalsWithNull(existingCollection.getSkill().getName(), collection.getName()))) {
                 SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, collection.getName());
                 existingCollection.setSkill(skill);
+                this.getLog().info("Updating existing collection {0}", existingCollection.getSkill().getName());
                 collectionRepository.update(existingCollection);
             }
 
@@ -61,14 +60,13 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             CollectionSqlModel newCollection = new CollectionSqlModel();
             SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, key);
             newCollection.setSkill(skill);
+            this.getLog().info("Adding new collection {0}", newCollection.getSkill().getKey());
             long id = collectionRepository.save(newCollection);
             return collectionRepository.findFirstOrNull(CollectionSqlModel::getId, id);
         }
     }
 
-    @SneakyThrows
-    private static CollectionItemSqlModel updateCollectionItem(ResourceCollectionsResponse.CollectionItem collectionItem, String key, CollectionSqlModel collection) {
-        @SuppressWarnings({"unchecked"}) // Doesn't matter because findFirstOrNull uses generics
+    private CollectionItemSqlModel updateCollectionItem(ResourceCollectionsResponse.CollectionItem collectionItem, String key, CollectionSqlModel collection) {
         CollectionItemSqlModel existingCollectionItem = collectionItemRepository.findFirstOrNull(
                 Pair.of(CollectionItemSqlModel::getCollection, collection),
                 Pair.of(FilterFunction.combine(CollectionItemSqlModel::getItem, ItemSqlModel::getItemId), key)
@@ -77,6 +75,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
         if (existingCollectionItem != null) {
             if (!(existingCollectionItem.getMaxTiers() == collectionItem.getMaxTiers())) {
                 existingCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
+                this.getLog().info("Updating existing collection item {0} in {1}", existingCollectionItem.getItem().getItemId(), existingCollectionItem.getCollection().getSkill().getKey());
                 collectionItemRepository.update(existingCollectionItem);
             }
 
@@ -87,14 +86,13 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionItem.setCollection(collection);
             newCollectionItem.setItem(item);
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
+            this.getLog().info("Adding new collection item {0} in {1}", newCollectionItem.getItem().getItemId(), newCollectionItem.getCollection().getSkill().getKey());
             long id = collectionItemRepository.save(newCollectionItem);
             return collectionItemRepository.findFirstOrNull(CollectionItemSqlModel::getId, id);
         }
     }
 
-    @SneakyThrows
-    private static void updateCollectionTier(ResourceCollectionsResponse.CollectionTier collectionTier, CollectionItemSqlModel collectionItem) {
-        @SuppressWarnings({"unchecked"}) // Doesn't matter because findFirstOrNull uses generics
+    private void updateCollectionTier(ResourceCollectionsResponse.CollectionTier collectionTier, CollectionItemSqlModel collectionItem) {
         CollectionItemTierSqlModel existingCollectionTier = collectionItemTierRepository.findFirstOrNull(
                 Pair.of(CollectionItemTierSqlModel::getCollectionItem, collectionItem),
                 Pair.of(CollectionItemTierSqlModel::getTier, collectionTier.getTier())
@@ -106,6 +104,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             )) {
                 existingCollectionTier.setUnlocks(collectionTier.getUnlocks());
                 existingCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
+                this.getLog().info("Updating existing collection tier {0} in {1}", existingCollectionTier.getTier(), existingCollectionTier.getCollectionItem().getItem().getItemId());
                 collectionItemTierRepository.update(existingCollectionTier);
             }
         } else {
@@ -114,6 +113,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionTier.setTier(collectionTier.getTier());
             newCollectionTier.setUnlocks(collectionTier.getUnlocks());
             newCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
+            this.getLog().info("Adding new collection tier {0} in {1}", newCollectionTier.getTier(), newCollectionTier.getCollectionItem().getItem().getItemId());
             collectionItemTierRepository.save(newCollectionTier);
         }
     }
