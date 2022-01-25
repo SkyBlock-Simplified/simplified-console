@@ -34,6 +34,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
     @Override
     public void process() {
         for (Map.Entry<String, ResourceCollectionsResponse.Collection> collectionEntry : super.getResourceResponse().getCollections().entrySet()) {
+            this.getLog().info("Processing {0}", collectionEntry.getKey());
             CollectionSqlModel collection = this.updateCollection(collectionEntry.getValue(), collectionEntry.getKey()); // Update `collections`
 
             for (Map.Entry<String, ResourceCollectionsResponse.CollectionItem> collectionItemEntry : collectionEntry.getValue().getItems().entrySet()) {

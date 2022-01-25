@@ -32,6 +32,8 @@ public class DatabaseUpdater {
         } catch (Exception exception) {
             exception.printStackTrace(); // TODO: Handle exception logging
         }
+
+        System.exit(0);
     }
 
     public static void main(String[] args) {

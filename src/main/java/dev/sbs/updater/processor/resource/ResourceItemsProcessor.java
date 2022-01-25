@@ -13,7 +13,6 @@ import dev.sbs.api.data.model.skyblock.minions.MinionSqlRepository;
 import dev.sbs.api.data.model.skyblock.rarities.RaritySqlModel;
 import dev.sbs.api.data.model.skyblock.rarities.RaritySqlRepository;
 import dev.sbs.api.data.sql.function.FilterFunction;
-import dev.sbs.api.scheduler.Scheduler;
 import dev.sbs.api.util.concurrent.Concurrent;
 import dev.sbs.api.util.concurrent.ConcurrentList;
 import dev.sbs.api.util.helper.StringUtil;
@@ -47,19 +46,21 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
     @Override
     public void process() {
         for (ResourceItemsResponse.Item itemEntry : super.getResourceResponse().getItems()) {
-            this.getLog().info("Processing {0} : {1}/{2}", itemEntry.getId(), super.getResourceResponse().getItems().indexOf(itemEntry), super.getResourceResponse().getItems().size());
-            this.updateRarity(itemEntry); // Update `rarities`
-            ItemSqlModel item = this.updateItem(itemEntry); // Update `items`
+            int index = super.getResourceResponse().getItems().indexOf(itemEntry);
 
-            if ("ACCESSORY".equals(item.getCategory()))
-                this.updateAccessory(item); // Update `accessories`
+            if (index > -1) {
+                this.getLog().info("Processing {0} : {1}/{2}", itemEntry.getId(), index, super.getResourceResponse().getItems().size());
+                this.updateRarity(itemEntry); // Update `rarities`
+                ItemSqlModel item = this.updateItem(itemEntry); // Update `items`
 
-            if (StringUtil.isNotEmpty(item.getGenerator())) {
-                MinionSqlModel minion = this.updateMinion(item); // Update `minions`
-                MinionTierSqlModel minionTier = this.updateMinionTier(minion, item); // Update `minion_tiers`
+                if ("ACCESSORY".equals(item.getCategory()))
+                    this.updateAccessory(item); // Update `accessories`
+
+                if (StringUtil.isNotEmpty(item.getGenerator())) {
+                    MinionSqlModel minion = this.updateMinion(item); // Update `minions`
+                    MinionTierSqlModel minionTier = this.updateMinionTier(minion, item); // Update `minion_tiers`
+                }
             }
-
-            Scheduler.sleep(100);
         }
     }
 
@@ -88,6 +89,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newAccessory.setName(item.getName());
             newAccessory.setRarity(item.getRarity());
             newAccessory.setFamilyRank(-1);
+            newAccessory.setAttainable(true);
             newAccessory.setEffects(stats);
             this.getLog().info("Adding new accessory {0}", newAccessory.getItem().getItemId());
             return newAccessory.save();
