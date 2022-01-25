@@ -18,6 +18,7 @@ import dev.sbs.updater.processor.Processor;
 
 import java.util.Map;
 
+@SuppressWarnings("all")
 public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsResponse> {
 
     private static final CollectionSqlRepository collectionRepository = (CollectionSqlRepository) SimplifiedApi.getRepositoryOf(CollectionSqlModel.class);
@@ -52,7 +53,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
                 SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, collection.getName());
                 existingCollection.setSkill(skill);
                 this.getLog().info("Updating existing collection {0}", existingCollection.getSkill().getName());
-                collectionRepository.update(existingCollection);
+                existingCollection.update();
             }
 
             return existingCollection;
@@ -61,8 +62,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, key);
             newCollection.setSkill(skill);
             this.getLog().info("Adding new collection {0}", newCollection.getSkill().getKey());
-            newCollection.save();
-            return newCollection;
+            return newCollection.save();
         }
     }
 
@@ -76,7 +76,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             if (!(existingCollectionItem.getMaxTiers() == collectionItem.getMaxTiers())) {
                 existingCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
                 this.getLog().info("Updating existing collection item {0} in {1}", existingCollectionItem.getItem().getItemId(), existingCollectionItem.getCollection().getSkill().getKey());
-                collectionItemRepository.update(existingCollectionItem);
+                existingCollectionItem.update();
             }
 
             return existingCollectionItem;
@@ -87,8 +87,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionItem.setItem(item);
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
             this.getLog().info("Adding new collection item {0} in {1}", newCollectionItem.getItem().getItemId(), newCollectionItem.getCollection().getSkill().getKey());
-            newCollectionItem.save();
-            return newCollectionItem;
+            return newCollectionItem.save();
         }
     }
 
@@ -105,7 +104,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
                 existingCollectionTier.setUnlocks(collectionTier.getUnlocks());
                 existingCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
                 this.getLog().info("Updating existing collection tier {0} in {1}", existingCollectionTier.getTier(), existingCollectionTier.getCollectionItem().getItem().getItemId());
-                collectionItemTierRepository.update(existingCollectionTier);
+                existingCollectionTier.update();
             }
         } else {
             CollectionItemTierSqlModel newCollectionTier = new CollectionItemTierSqlModel();

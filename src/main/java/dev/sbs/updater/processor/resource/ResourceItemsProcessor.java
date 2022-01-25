@@ -13,13 +13,13 @@ import dev.sbs.api.data.model.skyblock.minions.MinionSqlRepository;
 import dev.sbs.api.data.model.skyblock.rarities.RaritySqlModel;
 import dev.sbs.api.data.model.skyblock.rarities.RaritySqlRepository;
 import dev.sbs.api.data.sql.function.FilterFunction;
+import dev.sbs.api.scheduler.Scheduler;
 import dev.sbs.api.util.concurrent.Concurrent;
 import dev.sbs.api.util.concurrent.ConcurrentList;
 import dev.sbs.api.util.helper.StringUtil;
 import dev.sbs.api.util.helper.WordUtil;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
-import org.hibernate.Session;
 
 import java.util.HashMap;
 import java.util.List;
@@ -46,24 +46,24 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
     @Override
     public void process() {
-        SimplifiedApi.getSqlSession().transaction(session -> {
-            for (ResourceItemsResponse.Item itemEntry : super.getResourceResponse().getItems()) {
-                this.getLog().info("Processing {0} : {1}/{2}", itemEntry.getId(), super.getResourceResponse().getItems().indexOf(itemEntry), super.getResourceResponse().getItems().size());
-                this.updateRarity(itemEntry, session); // Update `rarities`
-                ItemSqlModel item = this.updateItem(itemEntry, session); // Update `items`
+        for (ResourceItemsResponse.Item itemEntry : super.getResourceResponse().getItems()) {
+            this.getLog().info("Processing {0} : {1}/{2}", itemEntry.getId(), super.getResourceResponse().getItems().indexOf(itemEntry), super.getResourceResponse().getItems().size());
+            this.updateRarity(itemEntry); // Update `rarities`
+            ItemSqlModel item = this.updateItem(itemEntry); // Update `items`
 
-                if ("ACCESSORY".equals(item.getCategory()))
-                    this.updateAccessory(item, session); // Update `accessories`
+            if ("ACCESSORY".equals(item.getCategory()))
+                this.updateAccessory(item); // Update `accessories`
 
-                if (StringUtil.isNotEmpty(item.getGenerator())) {
-                    MinionSqlModel minion = this.updateMinion(item, session); // Update `minions`
-                    MinionTierSqlModel minionTier = this.updateMinionTier(minion, item, session); // Update `minion_tiers`
-                }
+            if (StringUtil.isNotEmpty(item.getGenerator())) {
+                MinionSqlModel minion = this.updateMinion(item); // Update `minions`
+                MinionTierSqlModel minionTier = this.updateMinionTier(minion, item); // Update `minion_tiers`
             }
-        });
+
+            Scheduler.sleep(100);
+        }
     }
 
-    private AccessorySqlModel updateAccessory(ItemSqlModel item, Session session) {
+    private AccessorySqlModel updateAccessory(ItemSqlModel item) {
         AccessorySqlModel existingAccessory = accessoryRepository.findFirstOrNull(FilterFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
         Map<String, Double> stats = Concurrent.newMap(item.getStats());
 
@@ -78,7 +78,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingAccessory.setName(item.getName());
                 existingAccessory.setEffects(item.getStats());
                 this.getLog().info("Updating existing accessory {0}", existingAccessory.getItem().getItemId());
-                accessoryRepository.update(session, existingAccessory);
+                existingAccessory.update();
             }
 
             return existingAccessory;
@@ -90,12 +90,11 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newAccessory.setFamilyRank(-1);
             newAccessory.setEffects(stats);
             this.getLog().info("Adding new accessory {0}", newAccessory.getItem().getItemId());
-            accessoryRepository.save(session, newAccessory);
-            return newAccessory;
+            return newAccessory.save();
         }
     }
 
-    private MinionSqlModel updateMinion(ItemSqlModel item, Session session) {
+    private MinionSqlModel updateMinion(ItemSqlModel item) {
         MinionSqlModel existingMinion = minionRepository.findFirstOrNull(MinionSqlModel::getKey, item.getGenerator());
         String minionName = WordUtil.capitalizeFully(item.getGenerator().replace("_", " "));
 
@@ -103,7 +102,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             if (!equalsWithNull(existingMinion.getName(), minionName)) {
                 existingMinion.setName(minionName);
                 this.getLog().info("Updating existing minion {0} : {1}", existingMinion.getKey(), minionName);
-                minionRepository.update(session, existingMinion);
+                existingMinion.update();
             }
 
             return existingMinion;
@@ -113,12 +112,11 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinion.setName(minionName);
             newMinion.setCollection(null);
             this.getLog().info("Adding new minion {0}", newMinion.getKey());
-            minionRepository.save(session, newMinion);
-            return minionRepository.findFirstOrNull(MinionSqlModel::getKey, item.getGenerator());
+            return newMinion.save();
         }
     }
 
-    private MinionTierSqlModel updateMinionTier(MinionSqlModel minion, ItemSqlModel item, Session session) {
+    private MinionTierSqlModel updateMinionTier(MinionSqlModel minion, ItemSqlModel item) {
         MinionTierSqlModel existingMinionTier = minionTierRepository.findFirstOrNull(
             Pair.of(MinionTierSqlModel::getMinion, minion),
             Pair.of(MinionTierSqlModel::getItem, item)
@@ -131,7 +129,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingMinionTier.setMinion(minion);
                 existingMinionTier.setItem(item);
                 this.getLog().info("Updating existing minion tier {0}", existingMinionTier.getItem().getItemId());
-                minionTierRepository.update(session, existingMinionTier);
+                existingMinionTier.update();
             }
 
             return existingMinionTier;
@@ -141,12 +139,11 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinionTier.setItem(item);
             newMinionTier.setSpeed(-1);
             this.getLog().info("Adding new minion tier {0}", newMinionTier.getItem().getItemId());
-            minionTierRepository.save(session, newMinionTier);
-            return newMinionTier;
+            return newMinionTier.save();
         }
     }
 
-    private void updateRarity(ResourceItemsResponse.Item item, Session session) {
+    private void updateRarity(ResourceItemsResponse.Item item) {
         if (StringUtil.isNotEmpty(item.getTier())) {
             RaritySqlModel existingRarity = rarityRepository.findFirstOrNull(Pair.of(RaritySqlModel::getKey, item.getTier()));
 
@@ -157,12 +154,11 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 newRarity.setKeyValid(true);
                 this.getLog().info("Adding new rarity {0}", newRarity.getKey());
                 newRarity.save();
-                rarityRepository.save(session, newRarity);
             }
         }
     }
 
-    private ItemSqlModel updateItem(ResourceItemsResponse.Item item, Session session) {
+    private ItemSqlModel updateItem(ResourceItemsResponse.Item item) {
         ItemSqlModel existingItem = itemRepository.findFirstOrNull(ItemSqlModel::getItemId, item.getId());
         Map<String, Object> requirements = Concurrent.newMap(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), HashMap.class));
         Map<String, Object> catacombsRequirements = Concurrent.newMap(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), HashMap.class));
@@ -232,7 +228,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingItem.setPrivateIsland(item.getPrivateIsland());
                 existingItem.setCategory(item.getCategory());
                 this.getLog().info("Updating existing item {0}", existingItem.getItemId());
-                itemRepository.update(session, existingItem);
+                existingItem.update();
             }
             
             return existingItem;
@@ -264,8 +260,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newItem.setPrivateIsland(item.getPrivateIsland());
             newItem.setCategory(item.getCategory());
             this.getLog().info("Adding new item {0}", newItem.getItemId());
-            itemRepository.save(session, newItem);
-            return newItem;
+            return newItem.save();
         }
     }
 
