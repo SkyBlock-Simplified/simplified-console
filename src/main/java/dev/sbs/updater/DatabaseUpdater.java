@@ -23,7 +23,6 @@ public class DatabaseUpdater {
         ResourceCollectionsProcessor collectionsProcessor = new ResourceCollectionsProcessor(hypixelResourceData.getCollections());
 
         try {
-            // Process All Processors
             this.getLog().info("Processing Skills");
             skillsProcessor.process();
             this.getLog().info("Processing Items");

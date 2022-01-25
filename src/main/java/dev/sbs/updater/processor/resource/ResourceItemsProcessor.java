@@ -53,7 +53,9 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 this.updateAccessory(item); // Update `accessories`
 
             if (StringUtil.isNotEmpty(item.getGenerator())) {
-                SimplifiedApi.getConfig().setLoggingLevel(Level.DEBUG);
+                if (item.getGenerator().equals("ENDER_STONE"))
+                    SimplifiedApi.getConfig().setLoggingLevel(Level.TRACE);
+
                 MinionSqlModel minion = this.updateMinion(item); // Update `minions`
                 MinionTierSqlModel minionTier = this.updateMinionTier(minion, item); // Update `minion_tiers`
                 SimplifiedApi.getConfig().setLoggingLevel(Level.WARN);
@@ -99,6 +101,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             if (!equalsWithNull(existingMinion.getName(), minionName)) {
                 existingMinion.setName(minionName);
                 this.getLog().info("Updating existing minion {0} : {1}", existingMinion.getKey(), minionName);
+                //existingMinion.update();
                 minionRepository.update(existingMinion);
             }
 
