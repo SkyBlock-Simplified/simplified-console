@@ -1,6 +1,5 @@
 package dev.sbs.updater.processor.resource;
 
-import ch.qos.logback.classic.Level;
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceItemsResponse;
 import dev.sbs.api.data.model.skyblock.accessories.AccessorySqlModel;
@@ -22,6 +21,7 @@ import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("all")
@@ -53,43 +53,40 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 this.updateAccessory(item); // Update `accessories`
 
             if (StringUtil.isNotEmpty(item.getGenerator())) {
-                if (item.getGenerator().equals("ENDER_STONE"))
-                    SimplifiedApi.getConfig().setLoggingLevel(Level.TRACE);
-
                 MinionSqlModel minion = this.updateMinion(item); // Update `minions`
                 MinionTierSqlModel minionTier = this.updateMinionTier(minion, item); // Update `minion_tiers`
-                SimplifiedApi.getConfig().setLoggingLevel(Level.WARN);
             }
         }
     }
 
     private AccessorySqlModel updateAccessory(ItemSqlModel item) {
         AccessorySqlModel existingAccessory = accessoryRepository.findFirstOrNull(FilterFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
+        Map<String, Double> stats = Concurrent.newMap(item.getStats());
 
         if (existingAccessory != null) {
-            if (!item.getStats().equals(existingAccessory.getEffects())
-                    || !equalsWithNull(item, existingAccessory.getItem())
-                    || !equalsWithNull(item.getRarity(), existingAccessory.getRarity())
-                    || !equalsWithNull(item.getName(), existingAccessory.getName())
+            if (!equalsWithNull(item.getStats(), stats)
+                || !equalsWithNull(item, existingAccessory.getItem())
+                || !equalsWithNull(item.getRarity(), existingAccessory.getRarity())
+                || !equalsWithNull(item.getName(), existingAccessory.getName())
             ) {
                 existingAccessory.setItem(item);
                 existingAccessory.setRarity(item.getRarity());
                 existingAccessory.setName(item.getName());
                 existingAccessory.setEffects(item.getStats());
                 this.getLog().info("Updating existing accessory {0}", existingAccessory.getItem().getItemId());
-                accessoryRepository.update(existingAccessory);
+                existingAccessory.update();
             }
 
             return existingAccessory;
         } else {
             AccessorySqlModel newAccessory = new AccessorySqlModel();
             newAccessory.setItem(item);
-            newAccessory.setRarity(item.getRarity());
             newAccessory.setName(item.getName());
-            newAccessory.setEffects(item.getStats());
+            newAccessory.setRarity(item.getRarity());
+            newAccessory.setEffects(stats);
             this.getLog().info("Adding new accessory {0}", newAccessory.getItem().getItemId());
-            long id = accessoryRepository.save(newAccessory);
-            return accessoryRepository.findFirstOrNull(AccessorySqlModel::getId, id);
+            newAccessory.save();
+            return newAccessory;
         }
     }
 
@@ -101,8 +98,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             if (!equalsWithNull(existingMinion.getName(), minionName)) {
                 existingMinion.setName(minionName);
                 this.getLog().info("Updating existing minion {0} : {1}", existingMinion.getKey(), minionName);
-                //existingMinion.update();
-                minionRepository.update(existingMinion);
+                existingMinion.update();
             }
 
             return existingMinion;
@@ -112,8 +108,8 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinion.setName(minionName);
             newMinion.setCollection(null);
             this.getLog().info("Adding new minion {0}", newMinion.getKey());
-            long id = minionRepository.save(newMinion);
-            return minionRepository.findFirstOrNull(MinionSqlModel::getId, id);
+            newMinion.save();
+            return newMinion;
         }
     }
 
@@ -125,12 +121,12 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
         if (existingMinionTier != null) {
             if (!equalsWithNull(existingMinionTier.getMinion(), minion)
-                    || !(equalsWithNull(existingMinionTier.getItem(), item))
+                    || !equalsWithNull(existingMinionTier.getItem(), item)
             ) {
                 existingMinionTier.setMinion(minion);
                 existingMinionTier.setItem(item);
-                this.getLog().info("Updating existing minion tier {0}", existingMinionTier.getMinion().getKey());
-                minionTierRepository.update(existingMinionTier);
+                this.getLog().info("Updating existing minion tier {0}", existingMinionTier.getItem().getItemId());
+                existingMinionTier.update();
             }
 
             return existingMinionTier;
@@ -138,13 +134,14 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             MinionTierSqlModel newMinionTier = new MinionTierSqlModel();
             newMinionTier.setMinion(minion);
             newMinionTier.setItem(item);
-            this.getLog().info("Adding new minion tier {0}", newMinionTier.getMinion().getKey());
-            long id = minionTierRepository.save(newMinionTier);
-            return minionTierRepository.findFirstOrNull(MinionTierSqlModel::getId, id);
+            newMinionTier.setSpeed(-1);
+            this.getLog().info("Adding new minion tier {0}", newMinionTier.getItem().getItemId());
+            newMinionTier.save();
+            return newMinionTier;
         }
     }
 
-    private RaritySqlModel updateRarity(ResourceItemsResponse.Item item) {
+    private void updateRarity(ResourceItemsResponse.Item item) {
         if (StringUtil.isNotEmpty(item.getTier())) {
             RaritySqlModel existingRarity = rarityRepository.findFirstOrNull(Pair.of(RaritySqlModel::getKey, item.getTier()));
 
@@ -154,21 +151,18 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 newRarity.setName(WordUtil.capitalize(item.getTier()));
                 newRarity.setKeyValid(true);
                 this.getLog().info("Adding new rarity {0}", newRarity.getKey());
-                long id = rarityRepository.save(newRarity);
-                return rarityRepository.findFirstOrNull(RaritySqlModel::getId, id);
+                newRarity.save();
             }
-
-            return existingRarity;
         }
-
-        return null;
     }
 
     private ItemSqlModel updateItem(ResourceItemsResponse.Item item) {
         ItemSqlModel existingItem = itemRepository.findFirstOrNull(ItemSqlModel::getItemId, item.getId());
-        Map<String, Object> requirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), HashMap.class);
-        Map<String, Object> catacombsRequirements = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), HashMap.class);
-        Map<String, Object> essence = SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getEssence()), HashMap.class);
+        Map<String, Object> requirements = Concurrent.newMap(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), HashMap.class));
+        Map<String, Object> catacombsRequirements = Concurrent.newMap(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), HashMap.class));
+        Map<String, Object> essence = Concurrent.newMap(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getEssence()), HashMap.class));
+        Map<String, Double> stats = Concurrent.newMap(item.getStats());
+        Map<String, List<Integer>> tieredStats = Concurrent.newMap(item.getTieredStats());
         RaritySqlModel rarity = rarityRepository.findFirst(Pair.of(RaritySqlModel::getName, item.getTier())).orElse(commonRarityModel);
 
         // Fix Stats
@@ -190,11 +184,11 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                     && !equalsWithNull(existingItem.getGenerator(), item.getGenerator())
                     && existingItem.getGeneratorTier() != item.getGeneratorTier()
                     && existingItem.isGlowing() != item.isGlowing()
-                    && !equalsWithNull(existingItem.getStats(), item.getStats())
+                    && !equalsWithNull(existingItem.getStats(), stats)
                     && existingItem.getNpcSellPrice() != item.getNpcSellPrice()
                     && existingItem.isUnstackable() != item.isUnstackable()
                     && !equalsWithNull(existingItem.getColor(), item.getColor())
-                    && !equalsWithNull(existingItem.getTieredStats(), item.getTieredStats())
+                    && !equalsWithNull(existingItem.getTieredStats(), tieredStats)
                     && existingItem.getGearScore() != item.getGearScore()
                     && !equalsWithNull(existingItem.getRequirements(), requirements)
                     && !equalsWithNull(existingItem.getCatacombsRequirements(), catacombsRequirements)
@@ -216,11 +210,11 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingItem.setGenerator(item.getGenerator());
                 existingItem.setGeneratorTier(item.getGeneratorTier());
                 existingItem.setGlowing(item.isGlowing());
-                existingItem.setStats(item.getStats());
+                existingItem.setStats(stats);
                 existingItem.setNpcSellPrice(item.getNpcSellPrice());
                 existingItem.setUnstackable(item.isUnstackable());
                 existingItem.setColor(item.getColor());
-                existingItem.setTieredStats(item.getTieredStats());
+                existingItem.setTieredStats(tieredStats);
                 existingItem.setGearScore(item.getGearScore());
                 existingItem.setRequirements(requirements);
                 existingItem.setCatacombsRequirements(catacombsRequirements);
@@ -232,13 +226,12 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingItem.setPrivateIsland(item.getPrivateIsland());
                 existingItem.setCategory(item.getCategory());
                 this.getLog().info("Updating existing item {0}", existingItem.getItemId());
-                itemRepository.update(existingItem);
+                existingItem.update();
             }
             
             return existingItem;
         } else {
             ItemSqlModel newItem = new ItemSqlModel();
-            newItem.setItemId(item.getId());
             newItem.setName(item.getName());
             newItem.setMaterial(item.getMaterial());
             newItem.setDurability(item.getDurability());
@@ -249,11 +242,11 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newItem.setGenerator(item.getGenerator());
             newItem.setGeneratorTier(item.getGeneratorTier());
             newItem.setGlowing(item.isGlowing());
-            newItem.setStats(item.getStats());
+            newItem.setStats(stats);
             newItem.setNpcSellPrice(item.getNpcSellPrice());
             newItem.setUnstackable(item.isUnstackable());
             newItem.setColor(item.getColor());
-            newItem.setTieredStats(item.getTieredStats());
+            newItem.setTieredStats(tieredStats);
             newItem.setGearScore(item.getGearScore());
             newItem.setRequirements(requirements);
             newItem.setCatacombsRequirements(catacombsRequirements);
@@ -265,8 +258,8 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newItem.setPrivateIsland(item.getPrivateIsland());
             newItem.setCategory(item.getCategory());
             this.getLog().info("Adding new item {0}", newItem.getItemId());
-            long id = itemRepository.save(newItem);
-            return itemRepository.findFirstOrNull(ItemSqlModel::getId, id);
+            newItem.save();
+            return newItem;
         }
     }
 

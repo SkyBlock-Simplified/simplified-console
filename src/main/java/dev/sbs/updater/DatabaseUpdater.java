@@ -40,7 +40,6 @@ public class DatabaseUpdater {
 
     private void connectDatabase() {
         this.getLog().info("Connecting to Database");
-        SimplifiedApi.getConfig().setDatabaseDebugMode(true);
         SimplifiedApi.enableDatabase();
         this.getLog().info("Database Initialized in {0}ms", SimplifiedApi.getSqlSession().getInitializationTime());
         this.getLog().info("Database Cached in {0}ms", SimplifiedApi.getSqlSession().getStartupTime());

@@ -53,8 +53,8 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
             newSkill.setDescription(skill.getDescription());
             newSkill.setMaxLevel(skill.getMaxLevel());
             this.getLog().info("Adding new skill {0}", newSkill.getKey());
-            long id = skillRepository.save(newSkill);
-            return skillRepository.findFirstOrNull(SkillSqlModel::getId, id);
+            newSkill.save();
+            return newSkill;
         }
     }
 
@@ -77,7 +77,7 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
             newSkillLevel.setUnlocks(skillLevel.getUnlocks());
             newSkillLevel.setTotalExpRequired(skillLevel.getTotalExpRequired());
             this.getLog().info("Adding new skill level {0} for {1}", newSkillLevel.getLevel(), newSkillLevel.getSkill().getKey());
-            skillLevelRepository.save(newSkillLevel);
+            newSkillLevel.save();
         }
     }
 

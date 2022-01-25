@@ -61,8 +61,8 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, key);
             newCollection.setSkill(skill);
             this.getLog().info("Adding new collection {0}", newCollection.getSkill().getKey());
-            long id = collectionRepository.save(newCollection);
-            return collectionRepository.findFirstOrNull(CollectionSqlModel::getId, id);
+            newCollection.save();
+            return newCollection;
         }
     }
 
@@ -87,8 +87,8 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionItem.setItem(item);
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
             this.getLog().info("Adding new collection item {0} in {1}", newCollectionItem.getItem().getItemId(), newCollectionItem.getCollection().getSkill().getKey());
-            long id = collectionItemRepository.save(newCollectionItem);
-            return collectionItemRepository.findFirstOrNull(CollectionItemSqlModel::getId, id);
+            newCollectionItem.save();
+            return newCollectionItem;
         }
     }
 
@@ -114,7 +114,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionTier.setUnlocks(collectionTier.getUnlocks());
             newCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
             this.getLog().info("Adding new collection tier {0} in {1}", newCollectionTier.getTier(), newCollectionTier.getCollectionItem().getItem().getItemId());
-            collectionItemTierRepository.save(newCollectionTier);
+            newCollectionTier.save();
         }
     }
 
