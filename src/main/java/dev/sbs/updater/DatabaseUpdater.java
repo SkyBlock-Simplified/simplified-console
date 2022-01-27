@@ -30,7 +30,7 @@ public class DatabaseUpdater {
             this.getLog().info("Processing Collections");
             collectionsProcessor.process();
         } catch (Exception exception) {
-            exception.printStackTrace(); // TODO: Handle exception logging
+            exception.printStackTrace();
         }
 
         System.exit(0);
