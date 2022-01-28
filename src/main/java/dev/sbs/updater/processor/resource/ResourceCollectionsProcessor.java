@@ -2,6 +2,7 @@ package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceCollectionsResponse;
+import dev.sbs.api.data.function.FilterFunction;
 import dev.sbs.api.data.model.skyblock.collection_item_tiers.CollectionItemTierSqlModel;
 import dev.sbs.api.data.model.skyblock.collection_item_tiers.CollectionItemTierSqlRepository;
 import dev.sbs.api.data.model.skyblock.collection_items.CollectionItemSqlModel;
@@ -12,7 +13,6 @@ import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
 import dev.sbs.api.data.model.skyblock.items.ItemSqlRepository;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlRepository;
-import dev.sbs.api.data.sql.function.FilterFunction;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 
