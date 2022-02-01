@@ -43,18 +43,17 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
         items.forEach(itemEntry -> {
             this.getLog().info("Processing {0} : {1}/{2}", itemEntry.getId(), items.indexOf(itemEntry), items.size());
-            //this.updateRarity(itemEntry); // Update `rarities`
+            this.updateRarity(itemEntry); // Update `rarities`
 
-            this.updateItem(itemEntry); // Update `items`
-            //String stop = "here";
+            ItemSqlModel itemModel = this.updateItem(itemEntry); // Update `items`
 
-            //if ("ACCESSORY".equals(item.getCategory()))
-            //    this.updateAccessory(item); // Update `accessories`
+            if ("ACCESSORY".equals(itemModel.getCategory()))
+                this.updateAccessory(itemModel); // Update `accessories`
 
-            //if (StringUtil.isNotEmpty(item.getGenerator())) {
-            //MinionSqlModel minion = this.updateMinion(item); // Update `minions`
-            //MinionTierSqlModel minionTier = this.updateMinionTier(minion, item); // Update `minion_tiers`
-            //}
+            if (StringUtil.isNotEmpty(itemModel.getGenerator())) {
+                MinionSqlModel minion = this.updateMinion(itemModel); // Update `minions`
+                MinionTierSqlModel minionTier = this.updateMinionTier(minion, itemModel); // Update `minion_tiers`
+            }
         });
     }
 
