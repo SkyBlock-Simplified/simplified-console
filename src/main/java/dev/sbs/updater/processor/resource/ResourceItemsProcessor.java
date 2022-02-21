@@ -2,7 +2,6 @@ package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceItemsResponse;
-import dev.sbs.api.data.function.FilterFunction;
 import dev.sbs.api.data.model.skyblock.accessories.AccessorySqlModel;
 import dev.sbs.api.data.model.skyblock.accessories.AccessorySqlRepository;
 import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
@@ -17,6 +16,7 @@ import dev.sbs.api.util.concurrent.Concurrent;
 import dev.sbs.api.util.concurrent.ConcurrentList;
 import dev.sbs.api.util.helper.StringUtil;
 import dev.sbs.api.util.helper.WordUtil;
+import dev.sbs.api.util.search.function.FilterFunction;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 
