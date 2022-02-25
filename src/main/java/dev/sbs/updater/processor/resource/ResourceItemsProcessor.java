@@ -16,7 +16,7 @@ import dev.sbs.api.util.concurrent.Concurrent;
 import dev.sbs.api.util.concurrent.ConcurrentList;
 import dev.sbs.api.util.helper.StringUtil;
 import dev.sbs.api.util.helper.WordUtil;
-import dev.sbs.api.util.search.function.FilterFunction;
+import dev.sbs.api.util.search.function.SearchFunction;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 
@@ -58,7 +58,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
     }
 
     private AccessorySqlModel updateAccessory(ItemSqlModel item) {
-        AccessorySqlModel existingAccessory = accessoryRepository.findFirstOrNull(FilterFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
+        AccessorySqlModel existingAccessory = accessoryRepository.findFirstOrNull(SearchFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
         Map<String, Double> stats = Concurrent.newMap(item.getStats());
 
         if (existingAccessory != null) {

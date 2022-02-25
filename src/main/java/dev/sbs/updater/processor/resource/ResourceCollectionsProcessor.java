@@ -12,7 +12,7 @@ import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
 import dev.sbs.api.data.model.skyblock.items.ItemSqlRepository;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlRepository;
-import dev.sbs.api.util.search.function.FilterFunction;
+import dev.sbs.api.util.search.function.SearchFunction;
 import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 
@@ -47,7 +47,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
     }
 
     private CollectionSqlModel updateCollection(ResourceCollectionsResponse.Collection collection, String key) {
-        CollectionSqlModel existingCollection = collectionRepository.findFirstOrNull(FilterFunction.combine(CollectionSqlModel::getSkill, SkillSqlModel::getKey), key);
+        CollectionSqlModel existingCollection = collectionRepository.findFirstOrNull(SearchFunction.combine(CollectionSqlModel::getSkill, SkillSqlModel::getKey), key);
 
         if (existingCollection != null) {
             if (!(equalsWithNull(existingCollection.getSkill().getName(), collection.getName()))) {
@@ -70,7 +70,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
     private CollectionItemSqlModel updateCollectionItem(ResourceCollectionsResponse.CollectionItem collectionItem, String key, CollectionSqlModel collection) {
         CollectionItemSqlModel existingCollectionItem = collectionItemRepository.findFirstOrNull(
                 Pair.of(CollectionItemSqlModel::getCollection, collection),
-                Pair.of(FilterFunction.combine(CollectionItemSqlModel::getItem, ItemSqlModel::getItemId), key)
+                Pair.of(SearchFunction.combine(CollectionItemSqlModel::getItem, ItemSqlModel::getItemId), key)
         );
 
         if (existingCollectionItem != null) {
