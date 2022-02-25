@@ -12,12 +12,12 @@ import dev.sbs.api.data.model.skyblock.minions.MinionSqlModel;
 import dev.sbs.api.data.model.skyblock.minions.MinionSqlRepository;
 import dev.sbs.api.data.model.skyblock.rarities.RaritySqlModel;
 import dev.sbs.api.data.model.skyblock.rarities.RaritySqlRepository;
-import dev.sbs.api.util.concurrent.Concurrent;
-import dev.sbs.api.util.concurrent.ConcurrentList;
+import dev.sbs.api.util.collection.concurrent.Concurrent;
+import dev.sbs.api.util.collection.concurrent.ConcurrentList;
+import dev.sbs.api.util.collection.search.function.SearchFunction;
+import dev.sbs.api.util.data.tuple.Pair;
 import dev.sbs.api.util.helper.StringUtil;
 import dev.sbs.api.util.helper.WordUtil;
-import dev.sbs.api.util.search.function.SearchFunction;
-import dev.sbs.api.util.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.HashMap;

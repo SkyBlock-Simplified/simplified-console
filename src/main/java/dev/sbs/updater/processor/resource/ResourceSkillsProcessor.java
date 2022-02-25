@@ -6,7 +6,7 @@ import dev.sbs.api.data.model.skyblock.skill_levels.SkillLevelSqlModel;
 import dev.sbs.api.data.model.skyblock.skill_levels.SkillLevelSqlRepository;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlRepository;
-import dev.sbs.api.util.tuple.Pair;
+import dev.sbs.api.util.data.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.Map;

@@ -6,7 +6,10 @@ import dev.sbs.api.util.ConsoleLogger;
 import dev.sbs.updater.processor.resource.ResourceCollectionsProcessor;
 import dev.sbs.updater.processor.resource.ResourceItemsProcessor;
 import dev.sbs.updater.processor.resource.ResourceSkillsProcessor;
+import dev.sbs.updater.util.UpdaterConfig;
 import lombok.Getter;
+
+import java.io.File;
 
 public class DatabaseUpdater {
 
@@ -14,8 +17,19 @@ public class DatabaseUpdater {
     @Getter private final ConsoleLogger log;
 
     public DatabaseUpdater() {
+        UpdaterConfig config;
+        try {
+            File currentDir = new File(SimplifiedApi.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            config = new UpdaterConfig(currentDir.getParentFile(), "updater");
+        } catch (Exception exception) {
+            throw new IllegalArgumentException("Unable to retrieve current directory", exception); // Should never get here
+        }
+
         this.log = new ConsoleLogger(this);
-        this.connectDatabase();
+        this.getLog().info("Connecting to Database");
+        SimplifiedApi.connectDatabase(config);
+        this.getLog().info("Database Initialized in {0}ms", SimplifiedApi.getSqlSession().getInitializationTime());
+        this.getLog().info("Database Cached in {0}ms", SimplifiedApi.getSqlSession().getStartupTime());
 
         this.getLog().info("Loading Processors");
         ResourceSkillsProcessor skillsProcessor = new ResourceSkillsProcessor(hypixelResourceData.getSkills());
@@ -38,13 +52,6 @@ public class DatabaseUpdater {
 
     public static void main(String[] args) {
         new DatabaseUpdater();
-    }
-
-    private void connectDatabase() {
-        this.getLog().info("Connecting to Database");
-        SimplifiedApi.connectDatabase();
-        this.getLog().info("Database Initialized in {0}ms", SimplifiedApi.getSqlSession().getInitializationTime());
-        this.getLog().info("Database Cached in {0}ms", SimplifiedApi.getSqlSession().getStartupTime());
     }
 
 }
