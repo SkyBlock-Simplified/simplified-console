@@ -146,7 +146,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 RaritySqlModel newRarity = new RaritySqlModel();
                 newRarity.setKey(item.getTier());
                 newRarity.setName(WordUtil.capitalize(item.getTier()));
-                newRarity.setKeyValid(true);
+                newRarity.setEnrichable(false);
                 this.getLog().info("Adding new rarity {0}", newRarity.getKey());
                 newRarity.save();
             }
