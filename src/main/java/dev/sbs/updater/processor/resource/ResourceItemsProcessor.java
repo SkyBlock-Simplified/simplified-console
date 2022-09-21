@@ -52,7 +52,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
             ItemSqlModel itemModel = this.updateItem(itemEntry); // Update `items`
 
-            if (itemModel.getItemType() != null && itemModel.getItemType().getKey().equals("ACCESSORY"))
+            if (itemModel.getType() != null && itemModel.getType().getKey().equals("ACCESSORY"))
                 this.updateAccessory(itemModel); // Update `accessories`
 
             if (StringUtil.isNotEmpty(itemModel.getGenerator())) {
@@ -190,7 +190,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 || !equalsWithNull(existingItem.getSkin(), item.getSkin())
                 || !equalsWithNull(existingItem.getFurniture(), item.getFurniture())
                 || !equalsWithNull(existingItem.getRarity(), rarity)
-                || !equalsWithNull(existingItem.getItemType(), itemType)
+                || !equalsWithNull(existingItem.getType(), itemType)
                 || !equalsWithNull(existingItem.getItemId(), item.getId())
                 || !equalsWithNull(existingItem.getColor(), item.getColor())
                 || !equalsWithNull(existingItem.getGenerator(), item.getGenerator())
@@ -222,7 +222,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingItem.setSkin(item.getSkin());
                 existingItem.setFurniture(item.getFurniture());
                 existingItem.setRarity(rarity);
-                existingItem.setItemType(itemType);
+                existingItem.setType(itemType);
                 existingItem.setItemId(item.getId());
                 existingItem.setColor(item.getColor());
                 existingItem.setGenerator(item.getGenerator());
@@ -260,7 +260,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newItem.setSkin(item.getSkin());
             newItem.setFurniture(item.getFurniture());
             newItem.setRarity(rarity);
-            newItem.setItemType(itemType);
+            newItem.setType(itemType);
             newItem.setItemId(item.getId());
             newItem.setColor(item.getColor());
             newItem.setGenerator(item.getGenerator());
