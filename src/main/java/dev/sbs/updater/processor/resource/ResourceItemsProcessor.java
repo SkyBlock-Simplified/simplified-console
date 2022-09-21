@@ -4,6 +4,8 @@ import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceItemsResponse;
 import dev.sbs.api.data.model.skyblock.accessories.AccessorySqlModel;
 import dev.sbs.api.data.model.skyblock.accessories.AccessorySqlRepository;
+import dev.sbs.api.data.model.skyblock.item_types.ItemTypeSqlModel;
+import dev.sbs.api.data.model.skyblock.item_types.ItemTypeSqlRepository;
 import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
 import dev.sbs.api.data.model.skyblock.items.ItemSqlRepository;
 import dev.sbs.api.data.model.skyblock.minion_tiers.MinionTierSqlModel;
@@ -20,14 +22,16 @@ import dev.sbs.api.util.helper.StringUtil;
 import dev.sbs.api.util.helper.WordUtil;
 import dev.sbs.updater.processor.Processor;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @SuppressWarnings("all")
 public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
     private static final RaritySqlRepository rarityRepository = (RaritySqlRepository) SimplifiedApi.getRepositoryOf(RaritySqlModel.class);
+    private static final ItemTypeSqlRepository itemTypeRepository = (ItemTypeSqlRepository) SimplifiedApi.getRepositoryOf(ItemTypeSqlModel.class);
     private static final ItemSqlRepository itemRepository = (ItemSqlRepository) SimplifiedApi.getRepositoryOf(ItemSqlModel.class);
     private static final AccessorySqlRepository accessoryRepository = (AccessorySqlRepository) SimplifiedApi.getRepositoryOf(AccessorySqlModel.class);
     private static final MinionSqlRepository minionRepository = (MinionSqlRepository) SimplifiedApi.getRepositoryOf(MinionSqlModel.class);
@@ -44,10 +48,11 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
         items.forEach(itemEntry -> {
             this.getLog().info("Processing {0} : {1}/{2}", itemEntry.getId(), items.indexOf(itemEntry), items.size());
             this.updateRarity(itemEntry); // Update `rarities`
+            this.updateItemType(itemEntry); // Update `item_types`
 
             ItemSqlModel itemModel = this.updateItem(itemEntry); // Update `items`
 
-            if ("ACCESSORY".equals(itemModel.getCategory()))
+            if (itemModel.getItemType() != null && itemModel.getItemType().getKey().equals("ACCESSORY"))
                 this.updateAccessory(itemModel); // Update `accessories`
 
             if (StringUtil.isNotEmpty(itemModel.getGenerator())) {
@@ -153,40 +158,61 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
         }
     }
 
+    private void updateItemType(ResourceItemsResponse.Item item) {
+        if (StringUtil.isNotEmpty(item.getItemType()) && !item.getItemType().equals("NONE")) {
+            Optional<ItemTypeSqlModel> existingItemType = itemTypeRepository.findFirst(Pair.of(ItemTypeSqlModel::getKey, item.getItemType()));
+
+            if (existingItemType.isEmpty()) {
+                ItemTypeSqlModel newItemType = new ItemTypeSqlModel();
+                newItemType.setKey(item.getItemType().toUpperCase());
+                newItemType.setName(WordUtil.capitalizeFully(item.getItemType().replace("_", " ")));
+                this.getLog().info("Adding new item type {0}", newItemType.getKey());
+                newItemType.save();
+            }
+        }
+    }
+
     private ItemSqlModel updateItem(ResourceItemsResponse.Item item) {
         ItemSqlModel existingItem = itemRepository.findFirstOrNull(ItemSqlModel::getItemId, item.getId());
         RaritySqlModel rarity = rarityRepository.findFirstOrNull(RaritySqlModel::getKey, StringUtil.defaultIfEmpty(item.getTier(), "COMMON").toUpperCase());
+        ItemTypeSqlModel itemType = itemTypeRepository.findFirstOrNull(ItemTypeSqlModel::getKey, item.getItemType());
 
         // Wrap Null Values
-        Map<String, Object> requirements = Concurrent.newMap(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), HashMap.class));
-        Map<String, Object> catacombsRequirements = Concurrent.newMap(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), HashMap.class));
-        Map<String, Object> essence = Concurrent.newMap(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getEssence()), HashMap.class));
+        List<Map<String, Object>> requirements = Concurrent.newList(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), List.class));
+        List<Map<String, Object>> catacombsRequirements = Concurrent.newList(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), List.class));
+        List<List<Map<String, Object>>> upgradeCosts = Concurrent.newList(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getUpgradeCosts()), List.class));
+        List<Map<String, Object>> gemstoneSlots = Concurrent.newList(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getGemstoneSlots()), List.class));
         
-        if (existingItem != null) {
+        if (Objects.nonNull(existingItem)) {
             if (!equalsWithNull(existingItem.getName(), item.getName())
                 || !equalsWithNull(existingItem.getMaterial(), item.getMaterial())
                 || existingItem.getDurability() != item.getDurability()
                 || !equalsWithNull(existingItem.getSkin(), item.getSkin())
                 || !equalsWithNull(existingItem.getFurniture(), item.getFurniture())
                 || !equalsWithNull(existingItem.getRarity(), rarity)
+                || !equalsWithNull(existingItem.getItemType(), itemType)
                 || !equalsWithNull(existingItem.getItemId(), item.getId())
+                || !equalsWithNull(existingItem.getColor(), item.getColor())
                 || !equalsWithNull(existingItem.getGenerator(), item.getGenerator())
                 || existingItem.getGeneratorTier() != item.getGeneratorTier()
                 || existingItem.isGlowing() != item.isGlowing()
-                || !equalsWithNull(existingItem.getCategory(), item.getCategory())
-                || !equalsWithNull(existingItem.getStats(), item.getStats())
-                || existingItem.getNpcSellPrice() != item.getNpcSellPrice()
                 || existingItem.isUnstackable() != item.isUnstackable()
+                || existingItem.isInMuseum() != item.isMuseum()
                 || existingItem.isDungeonItem() != item.isDungeonItem()
-                || !equalsWithNull(existingItem.getColor(), item.getColor())
-                || !equalsWithNull(existingItem.getTieredStats(), item.getTieredStats())
+                || existingItem.isAttributable() != item.isAttributable()
+                || existingItem.getNpcSellPrice() != item.getNpcSellPrice()
                 || existingItem.getGearScore() != item.getGearScore()
+                || !equalsWithNull(existingItem.getStats(), item.getStats())
+                || !equalsWithNull(existingItem.getTieredStats(), item.getTieredStats())
                 || !equalsWithNull(existingItem.getRequirements(), requirements)
                 || !equalsWithNull(existingItem.getCatacombsRequirements(), catacombsRequirements)
-                || !equalsWithNull(existingItem.getEssence(), essence)
+                || !equalsWithNull(existingItem.getUpgradeCosts(), upgradeCosts)
+                || !equalsWithNull(existingItem.getGemstoneSlots(), gemstoneSlots)
+                || !equalsWithNull(existingItem.getEnchantments(), item.getEnchantments())
+                || !equalsWithNull(existingItem.getDungeonItemConversionCost(), item.getDungeonItemConversionCost())
+                || !equalsWithNull(existingItem.getPrestige(), item.getPrestige())
                 || !equalsWithNull(existingItem.getDescription(), item.getDescription())
                 || existingItem.getAbilityDamageScaling() != item.getAbilityDamageScaling()
-                || !equalsWithNull(existingItem.getEnchantments(), item.getEnchantments())
                 || !equalsWithNull(existingItem.getCrystal(), item.getCrystal())
                 || !equalsWithNull(existingItem.getPrivateIsland(), item.getPrivateIsland())
             ) {
@@ -196,24 +222,29 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingItem.setSkin(item.getSkin());
                 existingItem.setFurniture(item.getFurniture());
                 existingItem.setRarity(rarity);
+                existingItem.setItemType(itemType);
                 existingItem.setItemId(item.getId());
+                existingItem.setColor(item.getColor());
                 existingItem.setGenerator(item.getGenerator());
                 existingItem.setGeneratorTier(item.getGeneratorTier());
                 existingItem.setGlowing(item.isGlowing());
-                existingItem.setCategory(item.getCategory());
-                existingItem.setStats(item.getStats());
-                existingItem.setNpcSellPrice(item.getNpcSellPrice());
                 existingItem.setUnstackable(item.isUnstackable());
+                existingItem.setInMuseum(item.isMuseum());
                 existingItem.setDungeonItem(item.isDungeonItem());
-                existingItem.setColor(item.getColor());
-                existingItem.setTieredStats(item.getTieredStats());
+                existingItem.setAttributable(item.isAttributable());
+                existingItem.setNpcSellPrice(item.getNpcSellPrice());
                 existingItem.setGearScore(item.getGearScore());
+                existingItem.setStats(item.getStats());
+                existingItem.setTieredStats(item.getTieredStats());
                 existingItem.setRequirements(requirements);
                 existingItem.setCatacombsRequirements(catacombsRequirements);
-                existingItem.setEssence(essence);
+                existingItem.setUpgradeCosts(upgradeCosts);
+                existingItem.setGemstoneSlots(gemstoneSlots);
+                existingItem.setEnchantments(item.getEnchantments());
+                existingItem.setDungeonItemConversionCost(item.getDungeonItemConversionCost());
+                existingItem.setPrestige(item.getPrestige());
                 existingItem.setDescription(item.getDescription());
                 existingItem.setAbilityDamageScaling(item.getAbilityDamageScaling());
-                existingItem.setEnchantments(item.getEnchantments());
                 existingItem.setCrystal(item.getCrystal());
                 existingItem.setPrivateIsland(item.getPrivateIsland());
                 this.getLog().info("Updating existing item {0}", existingItem.getItemId());
@@ -229,24 +260,30 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newItem.setSkin(item.getSkin());
             newItem.setFurniture(item.getFurniture());
             newItem.setRarity(rarity);
+            newItem.setItemType(itemType);
             newItem.setItemId(item.getId());
+            newItem.setColor(item.getColor());
             newItem.setGenerator(item.getGenerator());
             newItem.setGeneratorTier(item.getGeneratorTier());
+            newItem.setObtainable(true);
             newItem.setGlowing(item.isGlowing());
-            newItem.setCategory(item.getCategory());
-            newItem.setStats(item.getStats());
-            newItem.setNpcSellPrice(item.getNpcSellPrice());
             newItem.setUnstackable(item.isUnstackable());
+            newItem.setInMuseum(item.isMuseum());
             newItem.setDungeonItem(item.isDungeonItem());
-            newItem.setColor(item.getColor());
-            newItem.setTieredStats(item.getTieredStats());
+            newItem.setAttributable(item.isAttributable());
+            newItem.setNpcSellPrice(item.getNpcSellPrice());
             newItem.setGearScore(item.getGearScore());
+            newItem.setStats(item.getStats());
+            newItem.setTieredStats(item.getTieredStats());
             newItem.setRequirements(requirements);
             newItem.setCatacombsRequirements(catacombsRequirements);
-            newItem.setEssence(essence);
+            newItem.setUpgradeCosts(upgradeCosts);
+            newItem.setGemstoneSlots(gemstoneSlots);
+            newItem.setEnchantments(item.getEnchantments());
+            newItem.setDungeonItemConversionCost(item.getDungeonItemConversionCost());
+            newItem.setPrestige(item.getPrestige());
             newItem.setDescription(item.getDescription());
             newItem.setAbilityDamageScaling(item.getAbilityDamageScaling());
-            newItem.setEnchantments(item.getEnchantments());
             newItem.setCrystal(item.getCrystal());
             newItem.setPrivateIsland(item.getPrivateIsland());
             this.getLog().info("Adding new item {0}", newItem.getItemId());
