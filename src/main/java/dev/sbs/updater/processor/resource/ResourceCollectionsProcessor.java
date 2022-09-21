@@ -2,12 +2,12 @@ package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceCollectionsResponse;
-import dev.sbs.api.data.model.skyblock.collection_item_tiers.CollectionItemTierSqlModel;
-import dev.sbs.api.data.model.skyblock.collection_item_tiers.CollectionItemTierSqlRepository;
-import dev.sbs.api.data.model.skyblock.collection_items.CollectionItemSqlModel;
-import dev.sbs.api.data.model.skyblock.collection_items.CollectionItemSqlRepository;
-import dev.sbs.api.data.model.skyblock.collections.CollectionSqlModel;
-import dev.sbs.api.data.model.skyblock.collections.CollectionSqlRepository;
+import dev.sbs.api.data.model.skyblock.collection_data.collection_item_tiers.CollectionItemTierSqlModel;
+import dev.sbs.api.data.model.skyblock.collection_data.collection_item_tiers.CollectionItemTierSqlRepository;
+import dev.sbs.api.data.model.skyblock.collection_data.collection_items.CollectionItemSqlModel;
+import dev.sbs.api.data.model.skyblock.collection_data.collection_items.CollectionItemSqlRepository;
+import dev.sbs.api.data.model.skyblock.collection_data.collections.CollectionSqlModel;
+import dev.sbs.api.data.model.skyblock.collection_data.collections.CollectionSqlRepository;
 import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
 import dev.sbs.api.data.model.skyblock.items.ItemSqlRepository;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
