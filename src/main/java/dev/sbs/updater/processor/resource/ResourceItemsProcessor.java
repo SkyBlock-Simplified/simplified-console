@@ -87,7 +87,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newAccessory.setName(item.getName());
             newAccessory.setRarity(item.getRarity());
             newAccessory.setFamilyRank(-1);
-            newAccessory.setAttainable(true);
             newAccessory.setEffects(stats);
             this.getLog().info("Adding new accessory {0}", newAccessory.getItem().getItemId());
             return newAccessory.save();
