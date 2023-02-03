@@ -1,7 +1,7 @@
 package dev.sbs.updater;
 
 import dev.sbs.api.SimplifiedApi;
-import dev.sbs.api.client.hypixel.implementation.HypixelResourceData;
+import dev.sbs.api.client.hypixel.request.HypixelResourceRequest;
 import dev.sbs.api.util.ConsoleLogger;
 import dev.sbs.updater.processor.resource.ResourceCollectionsProcessor;
 import dev.sbs.updater.processor.resource.ResourceItemsProcessor;
@@ -13,7 +13,7 @@ import java.io.File;
 
 public class DatabaseUpdater {
 
-    private static final HypixelResourceData hypixelResourceData = SimplifiedApi.getWebApi(HypixelResourceData.class);
+    private static final HypixelResourceRequest HYPIXEL_RESOURCE_REQUEST = SimplifiedApi.getWebApi(HypixelResourceRequest.class);
     @Getter private final ConsoleLogger log;
 
     public DatabaseUpdater() {
@@ -32,9 +32,9 @@ public class DatabaseUpdater {
         this.getLog().info("Database Cached in {0}ms", SimplifiedApi.getSqlSession().getStartupTime());
 
         this.getLog().info("Loading Processors");
-        ResourceSkillsProcessor skillsProcessor = new ResourceSkillsProcessor(hypixelResourceData.getSkills());
-        ResourceItemsProcessor itemsProcessor = new ResourceItemsProcessor(hypixelResourceData.getItems());
-        ResourceCollectionsProcessor collectionsProcessor = new ResourceCollectionsProcessor(hypixelResourceData.getCollections());
+        ResourceSkillsProcessor skillsProcessor = new ResourceSkillsProcessor(HYPIXEL_RESOURCE_REQUEST.getSkills());
+        ResourceItemsProcessor itemsProcessor = new ResourceItemsProcessor(HYPIXEL_RESOURCE_REQUEST.getItems());
+        ResourceCollectionsProcessor collectionsProcessor = new ResourceCollectionsProcessor(HYPIXEL_RESOURCE_REQUEST.getCollections());
 
         try {
             this.getLog().info("Processing Skills");
