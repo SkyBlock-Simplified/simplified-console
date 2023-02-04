@@ -3,15 +3,11 @@ package dev.sbs.updater.processor.resource;
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.response.resource.ResourceCollectionsResponse;
 import dev.sbs.api.data.model.skyblock.collection_data.collection_item_tiers.CollectionItemTierSqlModel;
-import dev.sbs.api.data.model.skyblock.collection_data.collection_item_tiers.CollectionItemTierSqlRepository;
 import dev.sbs.api.data.model.skyblock.collection_data.collection_items.CollectionItemSqlModel;
-import dev.sbs.api.data.model.skyblock.collection_data.collection_items.CollectionItemSqlRepository;
 import dev.sbs.api.data.model.skyblock.collection_data.collections.CollectionSqlModel;
-import dev.sbs.api.data.model.skyblock.collection_data.collections.CollectionSqlRepository;
 import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
-import dev.sbs.api.data.model.skyblock.items.ItemSqlRepository;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
-import dev.sbs.api.data.model.skyblock.skills.SkillSqlRepository;
+import dev.sbs.api.data.sql.SqlRepository;
 import dev.sbs.api.util.collection.search.function.SearchFunction;
 import dev.sbs.api.util.data.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
@@ -21,11 +17,11 @@ import java.util.Map;
 @SuppressWarnings("all")
 public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsResponse> {
 
-    private static final CollectionSqlRepository collectionRepository = (CollectionSqlRepository) SimplifiedApi.getRepositoryOf(CollectionSqlModel.class);
-    private static final CollectionItemSqlRepository collectionItemRepository = (CollectionItemSqlRepository) SimplifiedApi.getRepositoryOf(CollectionItemSqlModel.class);
-    private static final CollectionItemTierSqlRepository collectionItemTierRepository = (CollectionItemTierSqlRepository) SimplifiedApi.getRepositoryOf(CollectionItemTierSqlModel.class);
-    private static final SkillSqlRepository skillRepository = (SkillSqlRepository) SimplifiedApi.getRepositoryOf(SkillSqlModel.class);
-    private static final ItemSqlRepository itemRepository = (ItemSqlRepository) SimplifiedApi.getRepositoryOf(ItemSqlModel.class);
+    private static final SqlRepository<CollectionSqlModel> collectionRepository = (SqlRepository<CollectionSqlModel>) SimplifiedApi.getRepositoryOf(CollectionSqlModel.class);
+    private static final SqlRepository<CollectionItemSqlModel> collectionItemRepository = (SqlRepository<CollectionItemSqlModel>) SimplifiedApi.getRepositoryOf(CollectionItemSqlModel.class);
+    private static final SqlRepository<CollectionItemTierSqlModel> collectionItemTierRepository = (SqlRepository<CollectionItemTierSqlModel>) SimplifiedApi.getRepositoryOf(CollectionItemTierSqlModel.class);
+    private static final SqlRepository<SkillSqlModel> skillRepository = (SqlRepository<SkillSqlModel>) SimplifiedApi.getRepositoryOf(SkillSqlModel.class);
+    private static final SqlRepository<ItemSqlModel> itemRepository = (SqlRepository<ItemSqlModel>) SimplifiedApi.getRepositoryOf(ItemSqlModel.class);
 
     public ResourceCollectionsProcessor(ResourceCollectionsResponse resourceResponse) {
         super(resourceResponse);
