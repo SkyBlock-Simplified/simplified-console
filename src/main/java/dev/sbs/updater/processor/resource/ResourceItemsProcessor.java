@@ -145,7 +145,9 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 RaritySqlModel newRarity = new RaritySqlModel();
                 newRarity.setKey(item.getTier());
                 newRarity.setName(WordUtil.capitalize(item.getTier()));
+                newRarity.setOrdinal(rarityRepository.findAll().stream().mapToInt(RaritySqlModel::getOrdinal).max().orElseThrow() + 1);
                 newRarity.setEnrichable(false);
+                newRarity.setMagicPowerMultiplier(0);
                 this.getLog().info("Adding new rarity {0}", newRarity.getKey());
                 newRarity.save();
             }
@@ -189,6 +191,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 || !equalsWithNull(existingItem.getColor(), item.getColor())
                 || !equalsWithNull(existingItem.getGenerator(), item.getGenerator())
                 || existingItem.getGeneratorTier() != item.getGeneratorTier()
+                || (rarity.getKey().equals("UNOBTAINABLE") && existingItem.isObtainable())
                 || existingItem.isGlowing() != item.isGlowing()
                 || existingItem.isUnstackable() != item.isUnstackable()
                 || existingItem.isInMuseum() != item.isMuseum()
@@ -221,6 +224,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingItem.setColor(item.getColor());
                 existingItem.setGenerator(item.getGenerator());
                 existingItem.setGeneratorTier(item.getGeneratorTier());
+                existingItem.setObtainable(!rarity.getKey().equals("UNOBTAINABLE"));
                 existingItem.setGlowing(item.isGlowing());
                 existingItem.setUnstackable(item.isUnstackable());
                 existingItem.setInMuseum(item.isMuseum());
@@ -259,7 +263,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newItem.setColor(item.getColor());
             newItem.setGenerator(item.getGenerator());
             newItem.setGeneratorTier(item.getGeneratorTier());
-            newItem.setObtainable(true);
+            newItem.setObtainable(!rarity.getKey().equals("UNOBTAINABLE"));
             newItem.setGlowing(item.isGlowing());
             newItem.setUnstackable(item.isUnstackable());
             newItem.setInMuseum(item.isMuseum());
