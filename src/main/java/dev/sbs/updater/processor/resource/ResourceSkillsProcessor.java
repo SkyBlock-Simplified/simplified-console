@@ -23,10 +23,13 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
     @Override
     public void process() {
         for (Map.Entry<String, ResourceSkillsResponse.Skill> skillEntry : super.getResourceResponse().getSkills().entrySet()) {
+            this.getLog().info("Processing {0} Skill", skillEntry.getKey());
             SkillSqlModel skill = this.updateSkill(skillEntry.getValue(), skillEntry.getKey()); // Update `skills`
 
-            for (ResourceSkillsResponse.SkillLevel skillLevel : skillEntry.getValue().getLevels())
+            for (ResourceSkillsResponse.SkillLevel skillLevel : skillEntry.getValue().getLevels()) {
+                this.getLog().info("Processing {0} Skill: Level {1}", skillEntry.getKey(), skillLevel.getLevel());
                 this.updateSkillLevel(skillLevel, skill); // Update `skilllevels`
+            }
         }
     }
 
