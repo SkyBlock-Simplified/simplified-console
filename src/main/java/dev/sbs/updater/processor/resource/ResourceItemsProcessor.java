@@ -138,14 +138,20 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
     }
 
     private void updateRarity(ResourceItemsResponse.Item item) {
-        if (StringUtil.isNotEmpty(item.getTier())) {
-            Optional<RaritySqlModel> existingRarity = rarityRepository.findFirst(Pair.of(RaritySqlModel::getKey, item.getTier()));
+        if (StringUtil.isNotEmpty(item.getRarity())) {
+            Optional<RaritySqlModel> existingRarity = rarityRepository.findFirst(Pair.of(RaritySqlModel::getKey, item.getRarity()));
 
             if (existingRarity.isEmpty()) {
                 RaritySqlModel newRarity = new RaritySqlModel();
-                newRarity.setKey(item.getTier());
-                newRarity.setName(WordUtil.capitalize(item.getTier()));
-                newRarity.setOrdinal(rarityRepository.findAll().stream().mapToInt(RaritySqlModel::getOrdinal).max().orElseThrow() + 1);
+                newRarity.setKey(item.getRarity());
+                newRarity.setName(WordUtil.capitalize(item.getRarity()));
+                newRarity.setOrdinal(
+                    rarityRepository.findAll()
+                        .stream()
+                        .mapToInt(RaritySqlModel::getOrdinal)
+                        .max()
+                        .orElseThrow() + 1
+                );
                 newRarity.setEnrichable(false);
                 newRarity.setMagicPowerMultiplier(0);
                 this.getLog().info("Adding new rarity {0}", newRarity.getKey());
@@ -169,124 +175,120 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
     }
 
     private ItemSqlModel updateItem(ResourceItemsResponse.Item item) {
-        ItemSqlModel existingItem = itemRepository.findFirstOrNull(ItemSqlModel::getItemId, item.getId());
-        RaritySqlModel rarity = rarityRepository.findFirstOrNull(RaritySqlModel::getKey, StringUtil.defaultIfEmpty(item.getTier(), "COMMON").toUpperCase());
+        ItemSqlModel updateItem = itemRepository.findFirstOrNull(ItemSqlModel::getItemId, item.getId());
+        RaritySqlModel rarity = rarityRepository.findFirstOrNull(RaritySqlModel::getKey, StringUtil.defaultIfEmpty(item.getRarity(), "COMMON").toUpperCase());
         ItemTypeSqlModel itemType = itemTypeRepository.findFirstOrNull(ItemTypeSqlModel::getKey, item.getItemType());
+        boolean updating = false;
+        boolean isNew = false;
 
         // Wrap Null Values
         List<Map<String, Object>> requirements = Concurrent.newList(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getRequirements()), List.class));
         List<Map<String, Object>> catacombsRequirements = Concurrent.newList(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getCatacombsRequirements()), List.class));
         List<List<Map<String, Object>>> upgradeCosts = Concurrent.newList(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getUpgradeCosts()), List.class));
         List<Map<String, Object>> gemstoneSlots = Concurrent.newList(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getGemstoneSlots()), List.class));
-        
-        if (Objects.nonNull(existingItem)) {
-            if (!equalsWithNull(existingItem.getName(), item.getName())
-                || !equalsWithNull(existingItem.getMaterial(), item.getMaterial())
-                || existingItem.getDurability() != item.getDurability()
-                || !equalsWithNull(existingItem.getSkin(), item.getSkin())
-                || !equalsWithNull(existingItem.getFurniture(), item.getFurniture())
-                || !equalsWithNull(existingItem.getRarity(), rarity)
-                || !equalsWithNull(existingItem.getType(), itemType)
-                || !equalsWithNull(existingItem.getItemId(), item.getId())
-                || !equalsWithNull(existingItem.getColor(), item.getColor())
-                || !equalsWithNull(existingItem.getGenerator(), item.getGenerator())
-                || existingItem.getGeneratorTier() != item.getGeneratorTier()
-                || (rarity.getKey().equals("UNOBTAINABLE") && existingItem.isObtainable())
-                || existingItem.isGlowing() != item.isGlowing()
-                || existingItem.isUnstackable() != item.isUnstackable()
-                || existingItem.isInMuseum() != item.isMuseum()
-                || existingItem.isDungeonItem() != item.isDungeonItem()
-                || existingItem.isAttributable() != item.isAttributable()
-                || existingItem.getNpcSellPrice() != item.getNpcSellPrice()
-                || existingItem.getGearScore() != item.getGearScore()
-                || !equalsWithNull(existingItem.getStats(), item.getStats())
-                || !equalsWithNull(existingItem.getTieredStats(), item.getTieredStats())
-                || !equalsWithNull(existingItem.getRequirements(), requirements)
-                || !equalsWithNull(existingItem.getCatacombsRequirements(), catacombsRequirements)
-                || !equalsWithNull(existingItem.getUpgradeCosts(), upgradeCosts)
-                || !equalsWithNull(existingItem.getGemstoneSlots(), gemstoneSlots)
-                || !equalsWithNull(existingItem.getEnchantments(), item.getEnchantments())
-                || !equalsWithNull(existingItem.getDungeonItemConversionCost(), item.getDungeonItemConversionCost())
-                || !equalsWithNull(existingItem.getPrestige(), item.getPrestige())
-                || !equalsWithNull(existingItem.getDescription(), item.getDescription())
-                || existingItem.getAbilityDamageScaling() != item.getAbilityDamageScaling()
-                || !equalsWithNull(existingItem.getCrystal(), item.getCrystal())
-                || !equalsWithNull(existingItem.getPrivateIsland(), item.getPrivateIsland())
-            ) {
-                existingItem.setName(item.getName());
-                existingItem.setMaterial(item.getMaterial());
-                existingItem.setDurability(item.getDurability());
-                existingItem.setSkin(item.getSkin());
-                existingItem.setFurniture(item.getFurniture());
-                existingItem.setRarity(rarity);
-                existingItem.setType(itemType);
-                existingItem.setItemId(item.getId());
-                existingItem.setColor(item.getColor());
-                existingItem.setGenerator(item.getGenerator());
-                existingItem.setGeneratorTier(item.getGeneratorTier());
-                existingItem.setObtainable(!rarity.getKey().equals("UNOBTAINABLE"));
-                existingItem.setGlowing(item.isGlowing());
-                existingItem.setUnstackable(item.isUnstackable());
-                existingItem.setInMuseum(item.isMuseum());
-                existingItem.setDungeonItem(item.isDungeonItem());
-                existingItem.setAttributable(item.isAttributable());
-                existingItem.setNpcSellPrice(item.getNpcSellPrice());
-                existingItem.setGearScore(item.getGearScore());
-                existingItem.setStats(item.getStats());
-                existingItem.setTieredStats(item.getTieredStats());
-                existingItem.setRequirements(requirements);
-                existingItem.setCatacombsRequirements(catacombsRequirements);
-                existingItem.setUpgradeCosts(upgradeCosts);
-                existingItem.setGemstoneSlots(gemstoneSlots);
-                existingItem.setEnchantments(item.getEnchantments());
-                existingItem.setDungeonItemConversionCost(item.getDungeonItemConversionCost());
-                existingItem.setPrestige(item.getPrestige());
-                existingItem.setDescription(item.getDescription());
-                existingItem.setAbilityDamageScaling(item.getAbilityDamageScaling());
-                existingItem.setCrystal(item.getCrystal());
-                existingItem.setPrivateIsland(item.getPrivateIsland());
-                this.getLog().info("Updating existing item {0}", existingItem.getItemId());
-                existingItem.update();
-            }
-            
-            return existingItem;
-        } else {
-            ItemSqlModel newItem = new ItemSqlModel();
-            newItem.setName(item.getName());
-            newItem.setMaterial(item.getMaterial());
-            newItem.setDurability(item.getDurability());
-            newItem.setSkin(item.getSkin());
-            newItem.setFurniture(item.getFurniture());
-            newItem.setRarity(rarity);
-            newItem.setType(itemType);
-            newItem.setItemId(item.getId());
-            newItem.setColor(item.getColor());
-            newItem.setGenerator(item.getGenerator());
-            newItem.setGeneratorTier(item.getGeneratorTier());
-            newItem.setObtainable(!rarity.getKey().equals("UNOBTAINABLE"));
-            newItem.setGlowing(item.isGlowing());
-            newItem.setUnstackable(item.isUnstackable());
-            newItem.setInMuseum(item.isMuseum());
-            newItem.setDungeonItem(item.isDungeonItem());
-            newItem.setAttributable(item.isAttributable());
-            newItem.setNpcSellPrice(item.getNpcSellPrice());
-            newItem.setGearScore(item.getGearScore());
-            newItem.setStats(item.getStats());
-            newItem.setTieredStats(item.getTieredStats());
-            newItem.setRequirements(requirements);
-            newItem.setCatacombsRequirements(catacombsRequirements);
-            newItem.setUpgradeCosts(upgradeCosts);
-            newItem.setGemstoneSlots(gemstoneSlots);
-            newItem.setEnchantments(item.getEnchantments());
-            newItem.setDungeonItemConversionCost(item.getDungeonItemConversionCost());
-            newItem.setPrestige(item.getPrestige());
-            newItem.setDescription(item.getDescription());
-            newItem.setAbilityDamageScaling(item.getAbilityDamageScaling());
-            newItem.setCrystal(item.getCrystal());
-            newItem.setPrivateIsland(item.getPrivateIsland());
-            this.getLog().info("Adding new item {0}", newItem.getItemId());
-            return newItem.save();
+        List<Map<String, Object>> salvages = Concurrent.newList(SimplifiedApi.getGson().fromJson(SimplifiedApi.getGson().toJson(item.getSalvages()), List.class));
+
+        if (Objects.isNull(updateItem)) {
+            updateItem = new ItemSqlModel();
+            updating = true;
+            isNew = true;
+            this.getLog().info("Adding new item {0}", item.getId());
+        } else if (!equalsWithNull(updateItem.getItemId(), item.getId()) // Always true
+            || !equalsWithNull(updateItem.getName(), item.getName())
+            || !equalsWithNull(updateItem.getMaterial(), item.getMaterial())
+            || updateItem.getDurability() != item.getDurability()
+            || !equalsWithNull(updateItem.getDescription(), item.getDescription())
+            || !equalsWithNull(updateItem.getRarity(), rarity)
+            || !equalsWithNull(updateItem.getType(), itemType)
+            || !equalsWithNull(updateItem.getColor(), item.getColor())
+            || (rarity.getKey().equals("UNOBTAINABLE") && updateItem.isObtainable())
+            || updateItem.isGlowing() != item.isGlowing()
+            || updateItem.isUnstackable() != item.isUnstackable()
+            || updateItem.isInSpecialMuseum() != item.isMuseum()
+            || updateItem.isDungeonItem() != item.isDungeonItem()
+            || updateItem.isAttributable() != item.isAttributable()
+            || updateItem.isHiddenFromViewrecipe() != item.isHiddenFromViewrecipe()
+            || updateItem.isSalvageableFromRecipe() != item.isSalvageableFromRecipe()
+            || updateItem.isNotReforgeable() != item.isNotReforgeable()
+            || updateItem.isRiftTransferrable() != item.isRiftTransferrable()
+            || updateItem.getMotesSellPrice() != item.getMotesSellPrice()
+            || updateItem.getNpcSellPrice() != item.getNpcSellPrice()
+            || updateItem.getGearScore() != item.getGearScore()
+            || !equalsWithNull(updateItem.getGenerator(), item.getGenerator())
+            || updateItem.getGeneratorTier() != item.getGeneratorTier()
+            || updateItem.getAbilityDamageScaling() != item.getAbilityDamageScaling()
+            || !equalsWithNull(updateItem.getSoulbound(), item.getSoulbound())
+            || !equalsWithNull(updateItem.getFurniture(), item.getFurniture())
+            || !equalsWithNull(updateItem.getSwordType(), item.getSwordType())
+            || !equalsWithNull(updateItem.getSkin(), item.getSkin())
+            || !equalsWithNull(updateItem.getCrystal(), item.getCrystal())
+            || !equalsWithNull(updateItem.getPrivateIsland(), item.getPrivateIsland())
+            || !equalsWithNull(updateItem.getStats(), item.getStats())
+            || !equalsWithNull(updateItem.getTieredStats(), item.getTieredStats())
+            || !equalsWithNull(updateItem.getRequirements(), requirements)
+            || !equalsWithNull(updateItem.getCatacombsRequirements(), catacombsRequirements)
+            || !equalsWithNull(updateItem.getUpgradeCosts(), upgradeCosts)
+            || !equalsWithNull(updateItem.getGemstoneSlots(), gemstoneSlots)
+            || !equalsWithNull(updateItem.getEnchantments(), item.getEnchantments())
+            || !equalsWithNull(updateItem.getDungeonItemConversionCost(), item.getDungeonItemConversionCost())
+            || !equalsWithNull(updateItem.getPrestige(), item.getPrestige())
+            || !equalsWithNull(updateItem.getItemSpecific(), item.getItemSpecific())
+            || !equalsWithNull(updateItem.getSalvages(), salvages)
+        ) {
+            updating = true;
+            this.getLog().info("Updating existing item {0}", updateItem.getItemId());
         }
+
+        if (updating) {
+            updateItem.setItemId(item.getId());
+            updateItem.setName(item.getName());
+            updateItem.setMaterial(item.getMaterial());
+            updateItem.setDurability(item.getDurability());
+            updateItem.setDescription(item.getDescription());
+            updateItem.setRarity(rarity);
+            updateItem.setType(itemType);
+            updateItem.setColor(item.getColor());
+            updateItem.setObtainable(!rarity.getKey().equals("UNOBTAINABLE"));
+            updateItem.setGlowing(item.isGlowing());
+            updateItem.setUnstackable(item.isUnstackable());
+            updateItem.setInSpecialMuseum(item.isMuseum());
+            updateItem.setDungeonItem(item.isDungeonItem());
+            updateItem.setAttributable(item.isAttributable());
+            updateItem.setHiddenFromViewrecipe(item.isHiddenFromViewrecipe());
+            updateItem.setSalvageableFromRecipe(item.isSalvageableFromRecipe());
+            updateItem.setNotReforgeable(item.isNotReforgeable());
+            updateItem.setRiftTransferrable(item.isRiftTransferrable());
+            updateItem.setMotesSellPrice(item.getMotesSellPrice());
+            updateItem.setNpcSellPrice(item.getNpcSellPrice());
+            updateItem.setGearScore(item.getGearScore());
+            updateItem.setGenerator(item.getGenerator());
+            updateItem.setGeneratorTier(item.getGeneratorTier());
+            updateItem.setAbilityDamageScaling(item.getAbilityDamageScaling());
+            updateItem.setSoulbound(item.getSoulbound());
+            updateItem.setFurniture(item.getFurniture());
+            updateItem.setSwordType(item.getSwordType());
+            updateItem.setSkin(item.getSkin());
+            updateItem.setCrystal(item.getCrystal());
+            updateItem.setPrivateIsland(item.getPrivateIsland());
+            updateItem.setStats(item.getStats());
+            updateItem.setTieredStats(item.getTieredStats());
+            updateItem.setRequirements(requirements);
+            updateItem.setCatacombsRequirements(catacombsRequirements);
+            updateItem.setUpgradeCosts(upgradeCosts);
+            updateItem.setGemstoneSlots(gemstoneSlots);
+            updateItem.setEnchantments(item.getEnchantments());
+            updateItem.setDungeonItemConversionCost(item.getDungeonItemConversionCost());
+            updateItem.setPrestige(item.getPrestige());
+            updateItem.setItemSpecific(item.getItemSpecific());
+            updateItem.setSalvages(salvages);
+
+            if (isNew)
+                updateItem = updateItem.save();
+            else
+                updateItem = updateItem.update();
+        }
+
+        return updateItem;
     }
 
 }
