@@ -32,15 +32,15 @@ public class DatabaseUpdater {
         this.getLog().info("Database Cached in {0}ms", SimplifiedApi.getSqlSession().getStartupTime());
 
         this.getLog().info("Loading Processors");
-        ResourceSkillsProcessor skillsProcessor = new ResourceSkillsProcessor(HYPIXEL_RESOURCE_REQUEST.getSkills());
         ResourceItemsProcessor itemsProcessor = new ResourceItemsProcessor(HYPIXEL_RESOURCE_REQUEST.getItems());
+        ResourceSkillsProcessor skillsProcessor = new ResourceSkillsProcessor(HYPIXEL_RESOURCE_REQUEST.getSkills());
         ResourceCollectionsProcessor collectionsProcessor = new ResourceCollectionsProcessor(HYPIXEL_RESOURCE_REQUEST.getCollections());
 
         try {
-            this.getLog().info("Processing Skills");
-            skillsProcessor.process();
             this.getLog().info("Processing Items");
             itemsProcessor.process();
+            this.getLog().info("Processing Skills");
+            skillsProcessor.process();
             this.getLog().info("Processing Collections");
             collectionsProcessor.process();
         } catch (Exception exception) {
