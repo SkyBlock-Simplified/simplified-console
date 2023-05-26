@@ -5,6 +5,7 @@ import dev.sbs.api.client.hypixel.response.resource.ResourceSkillsResponse;
 import dev.sbs.api.data.model.skyblock.skill_levels.SkillLevelSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.sql.SqlRepository;
+import dev.sbs.api.util.collection.concurrent.ConcurrentList;
 import dev.sbs.api.util.data.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
 
@@ -13,8 +14,13 @@ import java.util.Map;
 @SuppressWarnings("all")
 public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
 
+    // Repositories
     private static final SqlRepository<SkillSqlModel> skillRepository = (SqlRepository<SkillSqlModel>) SimplifiedApi.getRepositoryOf(SkillSqlModel.class);
     private static final SqlRepository<SkillLevelSqlModel> skillLevelRepository = (SqlRepository<SkillLevelSqlModel>) SimplifiedApi.getRepositoryOf(SkillLevelSqlModel.class);
+
+    // Caches
+    private static ConcurrentList<SkillSqlModel> skillCache = skillRepository.findAll();
+    private static ConcurrentList<SkillLevelSqlModel> skillLevelCache = skillLevelRepository.findAll();
 
     public ResourceSkillsProcessor(ResourceSkillsResponse resourceResponse) {
         super(resourceResponse);
@@ -34,7 +40,7 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
     }
 
     private SkillSqlModel updateSkill(ResourceSkillsResponse.Skill skill, String key) {
-        SkillSqlModel existingSkill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, key);
+        SkillSqlModel existingSkill = skillCache.findFirstOrNull(SkillSqlModel::getKey, key);
 
         if (existingSkill != null) {
             if (!equalsWithNull(existingSkill.getName(), skill.getName())
@@ -46,7 +52,6 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
                 existingSkill.setMaxLevel(skill.getMaxLevel());
                 this.getLog().info("Updating existing skill {0}", existingSkill.getKey());
                 existingSkill.update();
-                skillRepository.update(existingSkill);
             }
 
             return existingSkill;
@@ -57,12 +62,13 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
             newSkill.setDescription(skill.getDescription());
             newSkill.setMaxLevel(skill.getMaxLevel());
             this.getLog().info("Adding new skill {0}", newSkill.getKey());
-            return newSkill.save();
+            skillCache.add(newSkill.save());
+            return newSkill;
         }
     }
 
     private SkillLevelSqlModel updateSkillLevel(ResourceSkillsResponse.SkillLevel skillLevel, SkillSqlModel skill) {
-        SkillLevelSqlModel existingSkillLevel = skillLevelRepository.findFirstOrNull(
+        SkillLevelSqlModel existingSkillLevel = skillLevelCache.findFirstOrNull(
                 Pair.of(SkillLevelSqlModel::getSkill, skill),
                 Pair.of(SkillLevelSqlModel::getLevel, skillLevel.getLevel())
         );
@@ -83,7 +89,8 @@ public class ResourceSkillsProcessor extends Processor<ResourceSkillsResponse> {
             newSkillLevel.setUnlocks(skillLevel.getUnlocks());
             newSkillLevel.setTotalExpRequired(skillLevel.getTotalExpRequired());
             this.getLog().info("Adding new skill level {0} for {1}", newSkillLevel.getLevel(), newSkillLevel.getSkill().getKey());
-            return newSkillLevel.save();
+            skillLevelCache.add(newSkillLevel.save());
+            return newSkillLevel;
         }
     }
 

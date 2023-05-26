@@ -25,12 +25,21 @@ import java.util.Optional;
 @SuppressWarnings("all")
 public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
+    // Repositories
     private static final SqlRepository<RaritySqlModel> rarityRepository = (SqlRepository<RaritySqlModel>) SimplifiedApi.getRepositoryOf(RaritySqlModel.class);
     private static final SqlRepository<ItemTypeSqlModel> itemTypeRepository = (SqlRepository<ItemTypeSqlModel>) SimplifiedApi.getRepositoryOf(ItemTypeSqlModel.class);
     private static final SqlRepository<ItemSqlModel> itemRepository = (SqlRepository<ItemSqlModel>) SimplifiedApi.getRepositoryOf(ItemSqlModel.class);
     private static final SqlRepository<AccessorySqlModel> accessoryRepository = (SqlRepository<AccessorySqlModel>) SimplifiedApi.getRepositoryOf(AccessorySqlModel.class);
     private static final SqlRepository<MinionSqlModel> minionRepository = (SqlRepository<MinionSqlModel>) SimplifiedApi.getRepositoryOf(MinionSqlModel.class);
     private static final SqlRepository<MinionTierSqlModel> minionTierRepository = (SqlRepository<MinionTierSqlModel>) SimplifiedApi.getRepositoryOf(MinionTierSqlModel.class);
+
+    // Caches
+    private static final ConcurrentList<RaritySqlModel> rarityCache = rarityRepository.findAll();
+    private static final ConcurrentList<ItemTypeSqlModel> itemTypeCache = itemTypeRepository.findAll();
+    private static final ConcurrentList<ItemSqlModel> itemCache = itemRepository.findAll();
+    private static final ConcurrentList<AccessorySqlModel> accessoryCache = accessoryRepository.findAll();
+    private static final ConcurrentList<MinionSqlModel> minionCache = minionRepository.findAll();
+    private static final ConcurrentList<MinionTierSqlModel> minionTierCache = minionTierRepository.findAll();
 
     public ResourceItemsProcessor(ResourceItemsResponse resourceItemsResponse) {
         super(resourceItemsResponse);
@@ -58,7 +67,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
     }
 
     private AccessorySqlModel updateAccessory(ItemSqlModel item) {
-        AccessorySqlModel existingAccessory = accessoryRepository.findFirstOrNull(SearchFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
+        AccessorySqlModel existingAccessory = accessoryCache.findFirstOrNull(SearchFunction.combine(AccessorySqlModel::getItem, ItemSqlModel::getItemId), item.getItemId());
         Map<String, Double> stats = Concurrent.newMap(item.getStats());
 
         if (existingAccessory != null) {
@@ -84,12 +93,13 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newAccessory.setFamilyRank(-1);
             newAccessory.setEffects(stats);
             this.getLog().info("Adding new accessory {0}", newAccessory.getItem().getItemId());
-            return newAccessory.save();
+            accessoryCache.add(newAccessory.save());
+            return newAccessory;
         }
     }
 
     private MinionSqlModel updateMinion(ItemSqlModel item) {
-        MinionSqlModel existingMinion = minionRepository.findFirstOrNull(MinionSqlModel::getKey, item.getGenerator());
+        MinionSqlModel existingMinion = minionCache.findFirstOrNull(MinionSqlModel::getKey, item.getGenerator());
         String minionName = WordUtil.capitalizeFully(item.getGenerator().replace("_", " "));
 
         if (existingMinion != null) {
@@ -106,12 +116,13 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinion.setName(minionName);
             newMinion.setCollection(null);
             this.getLog().info("Adding new minion {0}", newMinion.getKey());
-            return newMinion.save();
+            minionCache.add(newMinion.save());
+            return newMinion;
         }
     }
 
     private MinionTierSqlModel updateMinionTier(MinionSqlModel minion, ItemSqlModel item) {
-        MinionTierSqlModel existingMinionTier = minionTierRepository.findFirstOrNull(
+        MinionTierSqlModel existingMinionTier = minionTierCache.findFirstOrNull(
             Pair.of(MinionTierSqlModel::getMinion, minion),
             Pair.of(MinionTierSqlModel::getItem, item)
         );
@@ -133,20 +144,22 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinionTier.setItem(item);
             newMinionTier.setSpeed(-1);
             this.getLog().info("Adding new minion tier {0}", newMinionTier.getItem().getItemId());
-            return newMinionTier.save();
+            newMinionTier.save();
+            minionTierCache.add(newMinionTier.save());
+            return newMinionTier;
         }
     }
 
     private void updateRarity(ResourceItemsResponse.Item item) {
         if (StringUtil.isNotEmpty(item.getRarity())) {
-            Optional<RaritySqlModel> existingRarity = rarityRepository.findFirst(Pair.of(RaritySqlModel::getKey, item.getRarity()));
+            Optional<RaritySqlModel> existingRarity = rarityCache.findFirst(Pair.of(RaritySqlModel::getKey, item.getRarity()));
 
             if (existingRarity.isEmpty()) {
                 RaritySqlModel newRarity = new RaritySqlModel();
                 newRarity.setKey(item.getRarity());
                 newRarity.setName(WordUtil.capitalize(item.getRarity()));
                 newRarity.setOrdinal(
-                    rarityRepository.findAll()
+                    rarityCache.findAll()
                         .stream()
                         .mapToInt(RaritySqlModel::getOrdinal)
                         .max()
@@ -155,29 +168,29 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 newRarity.setEnrichable(false);
                 newRarity.setMagicPowerMultiplier(0);
                 this.getLog().info("Adding new rarity {0}", newRarity.getKey());
-                newRarity.save();
+                rarityCache.add(newRarity.save());
             }
         }
     }
 
     private void updateItemType(ResourceItemsResponse.Item item) {
         if (StringUtil.isNotEmpty(item.getItemType()) && !item.getItemType().equals("NONE")) {
-            Optional<ItemTypeSqlModel> existingItemType = itemTypeRepository.findFirst(Pair.of(ItemTypeSqlModel::getKey, item.getItemType()));
+            Optional<ItemTypeSqlModel> existingItemType = itemTypeCache.findFirst(Pair.of(ItemTypeSqlModel::getKey, item.getItemType()));
 
             if (existingItemType.isEmpty()) {
                 ItemTypeSqlModel newItemType = new ItemTypeSqlModel();
                 newItemType.setKey(item.getItemType().toUpperCase());
                 newItemType.setName(WordUtil.capitalizeFully(item.getItemType().replace("_", " ")));
                 this.getLog().info("Adding new item type {0}", newItemType.getKey());
-                newItemType.save();
+                itemTypeCache.add(newItemType.save());
             }
         }
     }
 
     private ItemSqlModel updateItem(ResourceItemsResponse.Item item) {
-        ItemSqlModel updateItem = itemRepository.findFirstOrNull(ItemSqlModel::getItemId, item.getId());
-        RaritySqlModel rarity = rarityRepository.findFirstOrNull(RaritySqlModel::getKey, StringUtil.defaultIfEmpty(item.getRarity(), "COMMON").toUpperCase());
-        ItemTypeSqlModel itemType = itemTypeRepository.findFirstOrNull(ItemTypeSqlModel::getKey, item.getItemType());
+        ItemSqlModel updateItem = itemCache.findFirstOrNull(ItemSqlModel::getItemId, item.getId());
+        RaritySqlModel rarity = rarityCache.findFirstOrNull(RaritySqlModel::getKey, StringUtil.defaultIfEmpty(item.getRarity(), "COMMON").toUpperCase());
+        ItemTypeSqlModel itemType = itemTypeCache.findFirstOrNull(ItemTypeSqlModel::getKey, item.getItemType());
         boolean updating = false;
         boolean isNew = false;
 
@@ -282,9 +295,10 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             updateItem.setItemSpecific(item.getItemSpecific());
             updateItem.setSalvages(salvages);
 
-            if (isNew)
+            if (isNew) {
                 updateItem = updateItem.save();
-            else
+                itemCache.add(updateItem);
+            } else
                 updateItem = updateItem.update();
         }
 

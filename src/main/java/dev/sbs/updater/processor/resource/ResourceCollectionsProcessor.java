@@ -8,6 +8,7 @@ import dev.sbs.api.data.model.skyblock.collection_data.collections.CollectionSql
 import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.sql.SqlRepository;
+import dev.sbs.api.util.collection.concurrent.ConcurrentList;
 import dev.sbs.api.util.collection.search.function.SearchFunction;
 import dev.sbs.api.util.data.tuple.Pair;
 import dev.sbs.updater.processor.Processor;
@@ -17,11 +18,19 @@ import java.util.Map;
 @SuppressWarnings("all")
 public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsResponse> {
 
+    // Repositories
     private static final SqlRepository<CollectionSqlModel> collectionRepository = (SqlRepository<CollectionSqlModel>) SimplifiedApi.getRepositoryOf(CollectionSqlModel.class);
     private static final SqlRepository<CollectionItemSqlModel> collectionItemRepository = (SqlRepository<CollectionItemSqlModel>) SimplifiedApi.getRepositoryOf(CollectionItemSqlModel.class);
     private static final SqlRepository<CollectionItemTierSqlModel> collectionItemTierRepository = (SqlRepository<CollectionItemTierSqlModel>) SimplifiedApi.getRepositoryOf(CollectionItemTierSqlModel.class);
     private static final SqlRepository<SkillSqlModel> skillRepository = (SqlRepository<SkillSqlModel>) SimplifiedApi.getRepositoryOf(SkillSqlModel.class);
     private static final SqlRepository<ItemSqlModel> itemRepository = (SqlRepository<ItemSqlModel>) SimplifiedApi.getRepositoryOf(ItemSqlModel.class);
+
+    // Caches
+    private static final ConcurrentList<CollectionSqlModel> collectionCache = collectionRepository.findAll();
+    private static final ConcurrentList<CollectionItemSqlModel> collectionItemCache = collectionItemRepository.findAll();
+    private static final ConcurrentList<CollectionItemTierSqlModel> collectionItemTierCache = collectionItemTierRepository.findAll();
+    private static final ConcurrentList<SkillSqlModel> skillCache = skillRepository.findAll();
+    private static final ConcurrentList<ItemSqlModel> itemCache = itemRepository.findAll();
 
     public ResourceCollectionsProcessor(ResourceCollectionsResponse resourceResponse) {
         super(resourceResponse);
@@ -43,11 +52,11 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
     }
 
     private CollectionSqlModel updateCollection(ResourceCollectionsResponse.Collection collection, String key) {
-        CollectionSqlModel existingCollection = collectionRepository.findFirstOrNull(SearchFunction.combine(CollectionSqlModel::getSkill, SkillSqlModel::getKey), key);
+        CollectionSqlModel existingCollection = collectionCache.findFirstOrNull(SearchFunction.combine(CollectionSqlModel::getSkill, SkillSqlModel::getKey), key);
 
         if (existingCollection != null) {
             if (!(equalsWithNull(existingCollection.getSkill().getName(), collection.getName()))) {
-                SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, collection.getName());
+                SkillSqlModel skill = skillCache.findFirstOrNull(SkillSqlModel::getKey, collection.getName());
                 existingCollection.setSkill(skill);
                 this.getLog().info("Updating existing collection {0}", existingCollection.getSkill().getName());
                 existingCollection.update();
@@ -56,10 +65,11 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             return existingCollection;
         } else {
             CollectionSqlModel newCollection = new CollectionSqlModel();
-            SkillSqlModel skill = skillRepository.findFirstOrNull(SkillSqlModel::getKey, key);
+            SkillSqlModel skill = skillCache.findFirstOrNull(SkillSqlModel::getKey, key);
             newCollection.setSkill(skill);
             this.getLog().info("Adding new collection {0}", newCollection.getSkill().getKey());
-            return newCollection.save();
+            collectionCache.add(newCollection.save());
+            return newCollection;
         }
     }
 
@@ -79,12 +89,13 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             return existingCollectionItem;
         } else {
             CollectionItemSqlModel newCollectionItem = new CollectionItemSqlModel();
-            ItemSqlModel item = itemRepository.findFirstOrNull(ItemSqlModel::getItemId, key);
+            ItemSqlModel item = itemCache.findFirstOrNull(ItemSqlModel::getItemId, key);
             newCollectionItem.setCollection(collection);
             newCollectionItem.setItem(item);
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
             this.getLog().info("Adding new collection item {0} in {1}", newCollectionItem.getItem().getItemId(), newCollectionItem.getCollection().getSkill().getKey());
-            return newCollectionItem.save();
+            collectionItemCache.add(newCollectionItem.save());
+            return newCollectionItem;
         }
     }
 
@@ -110,7 +121,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionTier.setUnlocks(collectionTier.getUnlocks());
             newCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
             this.getLog().info("Adding new collection tier {0} in {1}", newCollectionTier.getTier(), newCollectionTier.getCollectionItem().getItem().getItemId());
-            newCollectionTier.save();
+            collectionItemTierCache.add(newCollectionTier.save());
         }
     }
 
