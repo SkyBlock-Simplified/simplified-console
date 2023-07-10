@@ -144,7 +144,6 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinionTier.setItem(item);
             newMinionTier.setSpeed(-1);
             this.getLog().info("Adding new minion tier {0}", newMinionTier.getItem().getItemId());
-            newMinionTier.save();
             minionTierCache.add(newMinionTier.save());
             return newMinionTier;
         }
@@ -224,12 +223,14 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             || updateItem.isSalvageableFromRecipe() != item.isSalvageableFromRecipe()
             || updateItem.isNotReforgeable() != item.isNotReforgeable()
             || updateItem.isRiftTransferrable() != item.isRiftTransferrable()
-            || updateItem.getMotesSellPrice() != item.getMotesSellPrice()
+            || updateItem.isRiftLoseMotesValueOnTransfer() != item.isRiftLoseMotesValueOnTransfer()
+            || updateItem.getRiftMotesSellPrice() != item.getRiftMotesSellPrice()
             || updateItem.getNpcSellPrice() != item.getNpcSellPrice()
             || updateItem.getGearScore() != item.getGearScore()
             || !equalsWithNull(updateItem.getGenerator(), item.getGenerator())
             || updateItem.getGeneratorTier() != item.getGeneratorTier()
             || updateItem.getAbilityDamageScaling() != item.getAbilityDamageScaling()
+            || !equalsWithNull(updateItem.getOrigin(), item.getOrigin())
             || !equalsWithNull(updateItem.getSoulbound(), item.getSoulbound())
             || !equalsWithNull(updateItem.getFurniture(), item.getFurniture())
             || !equalsWithNull(updateItem.getSwordType(), item.getSwordType())
@@ -271,12 +272,14 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             updateItem.setSalvageableFromRecipe(item.isSalvageableFromRecipe());
             updateItem.setNotReforgeable(item.isNotReforgeable());
             updateItem.setRiftTransferrable(item.isRiftTransferrable());
-            updateItem.setMotesSellPrice(item.getMotesSellPrice());
+            updateItem.setRiftLoseMotesValueOnTransfer(item.isRiftLoseMotesValueOnTransfer());
+            updateItem.setRiftMotesSellPrice(item.getRiftMotesSellPrice());
             updateItem.setNpcSellPrice(item.getNpcSellPrice());
             updateItem.setGearScore(item.getGearScore());
             updateItem.setGenerator(item.getGenerator());
             updateItem.setGeneratorTier(item.getGeneratorTier());
             updateItem.setAbilityDamageScaling(item.getAbilityDamageScaling());
+            updateItem.setOrigin(item.getOrigin());
             updateItem.setSoulbound(item.getSoulbound());
             updateItem.setFurniture(item.getFurniture());
             updateItem.setSwordType(item.getSwordType());
