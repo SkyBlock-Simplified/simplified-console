@@ -11,6 +11,7 @@ import dev.sbs.api.data.sql.SqlRepository;
 import dev.sbs.api.util.collection.concurrent.ConcurrentList;
 import dev.sbs.api.util.collection.search.function.SearchFunction;
 import dev.sbs.api.util.data.tuple.Pair;
+import dev.sbs.api.util.helper.WordUtil;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.Map;
@@ -39,7 +40,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
     @Override
     public void process() {
         for (Map.Entry<String, ResourceCollectionsResponse.Collection> collectionEntry : super.getResourceResponse().getCollections().entrySet()) {
-            this.getLog().info("Processing {0}", collectionEntry.getKey());
+            this.getLog().info("Processing Collection {0}", collectionEntry.getKey());
             CollectionSqlModel collection = this.updateCollection(collectionEntry.getValue(), collectionEntry.getKey()); // Update `collections`
 
             for (Map.Entry<String, ResourceCollectionsResponse.CollectionItem> collectionItemEntry : collectionEntry.getValue().getItems().entrySet()) {
@@ -52,25 +53,19 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
     }
 
     private CollectionSqlModel updateCollection(ResourceCollectionsResponse.Collection collection, String key) {
-        CollectionSqlModel existingCollection = collectionCache.findFirstOrNull(SearchFunction.combine(CollectionSqlModel::getSkill, SkillSqlModel::getKey), key);
+        CollectionSqlModel existingCollection = collectionCache.findFirstOrNull(CollectionSqlModel::getKey, key);
 
-        if (existingCollection != null) {
-            if (!(equalsWithNull(existingCollection.getSkill().getName(), collection.getName()))) {
-                SkillSqlModel skill = skillCache.findFirstOrNull(SkillSqlModel::getKey, collection.getName());
-                existingCollection.setSkill(skill);
-                this.getLog().info("Updating existing collection {0}", existingCollection.getSkill().getName());
-                existingCollection.update();
-            }
-
-            return existingCollection;
-        } else {
+        if (existingCollection == null) {
             CollectionSqlModel newCollection = new CollectionSqlModel();
             SkillSqlModel skill = skillCache.findFirstOrNull(SkillSqlModel::getKey, key);
-            newCollection.setSkill(skill);
-            this.getLog().info("Adding new collection {0}", newCollection.getSkill().getKey());
+            newCollection.setKey(key);
+            newCollection.setName(WordUtil.capitalizeFully(key.replace("_", " ")));
+            this.getLog().info("Adding new collection {0}", key);
             collectionCache.add(newCollection.save());
             return newCollection;
         }
+
+        return existingCollection;
     }
 
     private CollectionItemSqlModel updateCollectionItem(ResourceCollectionsResponse.CollectionItem collectionItem, String key, CollectionSqlModel collection) {
@@ -82,7 +77,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
         if (existingCollectionItem != null) {
             if (!(existingCollectionItem.getMaxTiers() == collectionItem.getMaxTiers())) {
                 existingCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
-                this.getLog().info("Updating existing collection item {0} in {1}", existingCollectionItem.getItem().getItemId(), existingCollectionItem.getCollection().getSkill().getKey());
+                this.getLog().info("Updating existing collection item {0} in {1}", existingCollectionItem.getItem().getItemId(), existingCollectionItem.getCollection().getKey());
                 existingCollectionItem.update();
             }
 
@@ -93,7 +88,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionItem.setCollection(collection);
             newCollectionItem.setItem(item);
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
-            this.getLog().info("Adding new collection item {0} in {1}", newCollectionItem.getItem().getItemId(), newCollectionItem.getCollection().getSkill().getKey());
+            this.getLog().info("Adding new collection item {0} in {1}", newCollectionItem.getItem().getItemId(), newCollectionItem.getCollection().getKey());
             collectionItemCache.add(newCollectionItem.save());
             return newCollectionItem;
         }
