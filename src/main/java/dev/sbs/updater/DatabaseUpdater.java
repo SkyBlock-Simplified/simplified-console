@@ -2,6 +2,7 @@ package dev.sbs.updater;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.request.HypixelResourceRequest;
+import dev.sbs.api.data.DataSession;
 import dev.sbs.api.util.ConsoleLogger;
 import dev.sbs.updater.processor.resource.ResourceCollectionsProcessor;
 import dev.sbs.updater.processor.resource.ResourceItemsProcessor;
@@ -27,9 +28,9 @@ public class DatabaseUpdater {
 
         this.log = new ConsoleLogger(this);
         this.getLog().info("Connecting to Database");
-        SimplifiedApi.connectDatabase(config);
-        this.getLog().info("Database Initialized in {0}ms", SimplifiedApi.getSqlSession().getInitializationTime());
-        this.getLog().info("Database Cached in {0}ms", SimplifiedApi.getSqlSession().getStartupTime());
+        SimplifiedApi.connectSession(DataSession.Type.SQL, config);
+        this.getLog().info("Database Initialized in {0}ms", SimplifiedApi.getSession().getInitializationTime());
+        this.getLog().info("Database Cached in {0}ms", SimplifiedApi.getSession().getStartupTime());
 
         this.getLog().info("Loading Processors");
         ResourceItemsProcessor itemsProcessor = new ResourceItemsProcessor(HYPIXEL_RESOURCE_REQUEST.getItems());
