@@ -11,7 +11,7 @@ import dev.sbs.api.data.sql.SqlRepository;
 import dev.sbs.api.util.collection.concurrent.ConcurrentList;
 import dev.sbs.api.util.collection.search.function.SearchFunction;
 import dev.sbs.api.util.data.tuple.Pair;
-import dev.sbs.api.util.helper.WordUtil;
+import dev.sbs.api.util.helper.StringUtil;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.Map;
@@ -59,7 +59,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             CollectionSqlModel newCollection = new CollectionSqlModel();
             SkillSqlModel skill = skillCache.findFirstOrNull(SkillSqlModel::getKey, key);
             newCollection.setKey(key);
-            newCollection.setName(WordUtil.capitalizeFully(key.replace("_", " ")));
+            newCollection.setName(StringUtil.capitalizeFully(key.replace("_", " ")));
             this.getLog().info("Adding new collection {0}", key);
             collectionCache.add(newCollection.save());
             return newCollection;

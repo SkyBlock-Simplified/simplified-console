@@ -14,7 +14,6 @@ import dev.sbs.api.util.collection.concurrent.ConcurrentList;
 import dev.sbs.api.util.collection.search.function.SearchFunction;
 import dev.sbs.api.util.data.tuple.Pair;
 import dev.sbs.api.util.helper.StringUtil;
-import dev.sbs.api.util.helper.WordUtil;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.List;
@@ -100,7 +99,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
 
     private MinionSqlModel updateMinion(ItemSqlModel item) {
         MinionSqlModel existingMinion = minionCache.findFirstOrNull(MinionSqlModel::getKey, item.getGenerator());
-        String minionName = WordUtil.capitalizeFully(item.getGenerator().replace("_", " "));
+        String minionName = StringUtil.capitalizeFully(item.getGenerator().replace("_", " "));
 
         if (existingMinion != null) {
             if (!equalsWithNull(existingMinion.getName(), minionName)) {
@@ -156,7 +155,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             if (existingRarity.isEmpty()) {
                 RaritySqlModel newRarity = new RaritySqlModel();
                 newRarity.setKey(item.getRarity());
-                newRarity.setName(WordUtil.capitalize(item.getRarity()));
+                newRarity.setName(StringUtil.capitalize(item.getRarity()));
                 newRarity.setOrdinal(
                     rarityCache.findAll()
                         .stream()
@@ -179,7 +178,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             if (existingItemType.isEmpty()) {
                 ItemTypeSqlModel newItemType = new ItemTypeSqlModel();
                 newItemType.setKey(item.getItemType().toUpperCase());
-                newItemType.setName(WordUtil.capitalizeFully(item.getItemType().replace("_", " ")));
+                newItemType.setName(StringUtil.capitalizeFully(item.getItemType().replace("_", " ")));
                 this.getLog().info("Adding new item type {0}", newItemType.getKey());
                 itemTypeCache.add(newItemType.save());
             }
