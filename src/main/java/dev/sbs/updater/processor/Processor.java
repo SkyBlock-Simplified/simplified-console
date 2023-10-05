@@ -1,16 +1,18 @@
 package dev.sbs.updater.processor;
 
-import dev.sbs.api.util.ConsoleLogger;
 import lombok.Getter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+@Getter
 public abstract class Processor<R> {
 
-    @Getter private final R resourceResponse;
-    @Getter private final ConsoleLogger log;
+    private final R resourceResponse;
+    private final Logger log;
 
     public Processor(R resourceResponse) {
         this.resourceResponse = resourceResponse;
-        this.log = new ConsoleLogger(this);
+        this.log = LogManager.getLogger(this);
     }
 
     public abstract void process();
