@@ -40,7 +40,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
     @Override
     public void process() {
         for (Map.Entry<String, ResourceCollectionsResponse.Collection> collectionEntry : super.getResourceResponse().getCollections().entrySet()) {
-            this.getLog().info("Processing Collection {0}", collectionEntry.getKey());
+            this.getLog().info("Processing Collection {}", collectionEntry.getKey());
             CollectionSqlModel collection = this.updateCollection(collectionEntry.getValue(), collectionEntry.getKey()); // Update `collections`
 
             for (Map.Entry<String, ResourceCollectionsResponse.CollectionItem> collectionItemEntry : collectionEntry.getValue().getItems().entrySet()) {
@@ -60,7 +60,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             SkillSqlModel skill = skillCache.findFirstOrNull(SkillSqlModel::getKey, key);
             newCollection.setKey(key);
             newCollection.setName(StringUtil.capitalizeFully(key.replace("_", " ")));
-            this.getLog().info("Adding new collection {0}", key);
+            this.getLog().info("Adding new collection {}", key);
             collectionCache.add(newCollection.save());
             return newCollection;
         }
@@ -77,7 +77,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
         if (existingCollectionItem != null) {
             if (!(existingCollectionItem.getMaxTiers() == collectionItem.getMaxTiers())) {
                 existingCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
-                this.getLog().info("Updating existing collection item {0} in {1}", existingCollectionItem.getItem().getItemId(), existingCollectionItem.getCollection().getKey());
+                this.getLog().info("Updating existing collection item {} in {}", existingCollectionItem.getItem().getItemId(), existingCollectionItem.getCollection().getKey());
                 existingCollectionItem.update();
             }
 
@@ -88,7 +88,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionItem.setCollection(collection);
             newCollectionItem.setItem(item);
             newCollectionItem.setMaxTiers(collectionItem.getMaxTiers());
-            this.getLog().info("Adding new collection item {0} in {1}", newCollectionItem.getItem().getItemId(), newCollectionItem.getCollection().getKey());
+            this.getLog().info("Adding new collection item {} in {}", newCollectionItem.getItem().getItemId(), newCollectionItem.getCollection().getKey());
             collectionItemCache.add(newCollectionItem.save());
             return newCollectionItem;
         }
@@ -106,7 +106,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             )) {
                 existingCollectionTier.setUnlocks(collectionTier.getUnlocks());
                 existingCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
-                this.getLog().info("Updating existing collection tier {0} in {1}", existingCollectionTier.getTier(), existingCollectionTier.getCollectionItem().getItem().getItemId());
+                this.getLog().info("Updating existing collection tier {} in {}", existingCollectionTier.getTier(), existingCollectionTier.getCollectionItem().getItem().getItemId());
                 existingCollectionTier.update();
             }
         } else {
@@ -115,7 +115,7 @@ public class ResourceCollectionsProcessor extends Processor<ResourceCollectionsR
             newCollectionTier.setTier(collectionTier.getTier());
             newCollectionTier.setUnlocks(collectionTier.getUnlocks());
             newCollectionTier.setAmountRequired(collectionTier.getAmountRequired());
-            this.getLog().info("Adding new collection tier {0} in {1}", newCollectionTier.getTier(), newCollectionTier.getCollectionItem().getItem().getItemId());
+            this.getLog().info("Adding new collection tier {} in {}", newCollectionTier.getTier(), newCollectionTier.getCollectionItem().getItem().getItemId());
             collectionItemTierCache.add(newCollectionTier.save());
         }
     }

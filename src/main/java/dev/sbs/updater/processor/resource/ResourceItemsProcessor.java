@@ -49,7 +49,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
         ConcurrentList<ResourceItemsResponse.Item> items = this.getResourceResponse().getItems();
 
         items.forEach(itemEntry -> {
-            this.getLog().info("Processing {0} : {1}/{2}", itemEntry.getId(), items.indexOf(itemEntry), items.size());
+            this.getLog().info("Processing {} : {}/{}", itemEntry.getId(), items.indexOf(itemEntry), items.size());
             this.updateRarity(itemEntry); // Update `rarities`
             this.updateItemType(itemEntry); // Update `item_types`
 
@@ -79,7 +79,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 existingAccessory.setRarity(item.getRarity());
                 existingAccessory.setName(item.getName());
                 existingAccessory.setEffects(item.getStats());
-                this.getLog().info("Updating existing accessory {0}", existingAccessory.getItem().getItemId());
+                this.getLog().info("Updating existing accessory {}", existingAccessory.getItem().getItemId());
                 existingAccessory.update();
             }
 
@@ -91,7 +91,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newAccessory.setRarity(item.getRarity());
             newAccessory.setFamilyRank(-1);
             newAccessory.setEffects(stats);
-            this.getLog().info("Adding new accessory {0}", newAccessory.getItem().getItemId());
+            this.getLog().info("Adding new accessory {}", newAccessory.getItem().getItemId());
             accessoryCache.add(newAccessory.save());
             return newAccessory;
         }
@@ -104,7 +104,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
         if (existingMinion != null) {
             if (!equalsWithNull(existingMinion.getName(), minionName)) {
                 existingMinion.setName(minionName);
-                this.getLog().info("Updating existing minion {0} : {1}", existingMinion.getKey(), minionName);
+                this.getLog().info("Updating existing minion {} : {}", existingMinion.getKey(), minionName);
                 existingMinion.update();
             }
 
@@ -114,7 +114,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinion.setKey(item.getGenerator());
             newMinion.setName(minionName);
             newMinion.setCollection(null);
-            this.getLog().info("Adding new minion {0}", newMinion.getKey());
+            this.getLog().info("Adding new minion {}", newMinion.getKey());
             minionCache.add(newMinion.save());
             return newMinion;
         }
@@ -132,7 +132,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             ) {
                 existingMinionTier.setMinion(minion);
                 existingMinionTier.setItem(item);
-                this.getLog().info("Updating existing minion tier {0}", existingMinionTier.getItem().getItemId());
+                this.getLog().info("Updating existing minion tier {}", existingMinionTier.getItem().getItemId());
                 existingMinionTier.update();
             }
 
@@ -142,7 +142,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             newMinionTier.setMinion(minion);
             newMinionTier.setItem(item);
             newMinionTier.setSpeed(-1);
-            this.getLog().info("Adding new minion tier {0}", newMinionTier.getItem().getItemId());
+            this.getLog().info("Adding new minion tier {}", newMinionTier.getItem().getItemId());
             minionTierCache.add(newMinionTier.save());
             return newMinionTier;
         }
@@ -165,7 +165,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 );
                 newRarity.setEnrichable(false);
                 newRarity.setMagicPowerMultiplier(0);
-                this.getLog().info("Adding new rarity {0}", newRarity.getKey());
+                this.getLog().info("Adding new rarity {}", newRarity.getKey());
                 rarityCache.add(newRarity.save());
             }
         }
@@ -179,7 +179,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 ItemTypeSqlModel newItemType = new ItemTypeSqlModel();
                 newItemType.setKey(item.getItemType().toUpperCase());
                 newItemType.setName(StringUtil.capitalizeFully(item.getItemType().replace("_", " ")));
-                this.getLog().info("Adding new item type {0}", newItemType.getKey());
+                this.getLog().info("Adding new item type {}", newItemType.getKey());
                 itemTypeCache.add(newItemType.save());
             }
         }
@@ -203,7 +203,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             updateItem = new ItemSqlModel();
             updating = true;
             isNew = true;
-            this.getLog().info("Adding new item {0}", item.getId());
+            this.getLog().info("Adding new item {}", item.getId());
         } else if (!equalsWithNull(updateItem.getItemId(), item.getId()) // Always true
             || !equalsWithNull(updateItem.getName(), item.getName())
             || !equalsWithNull(updateItem.getMaterial(), item.getMaterial())
@@ -249,7 +249,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
             || !equalsWithNull(updateItem.getSalvages(), salvages)
         ) {
             updating = true;
-            this.getLog().info("Updating existing item {0}", updateItem.getItemId());
+            this.getLog().info("Updating existing item {}", updateItem.getItemId());
         }
 
         if (updating) {
