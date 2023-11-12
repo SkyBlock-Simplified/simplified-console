@@ -7,15 +7,15 @@ import dev.sbs.updater.processor.resource.ResourceItemsProcessor;
 import dev.sbs.updater.processor.resource.ResourceSkillsProcessor;
 import dev.sbs.updater.util.UpdaterConfig;
 import lombok.Getter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import java.io.File;
 
+@Getter
+@Log4j2
 public class DatabaseUpdater {
 
     private static final HypixelResourceRequest HYPIXEL_RESOURCE_REQUEST = SimplifiedApi.getWebApi(HypixelResourceRequest.class);
-    @Getter private final Logger log;
 
     public DatabaseUpdater() {
         UpdaterConfig config;
@@ -26,26 +26,27 @@ public class DatabaseUpdater {
             throw new IllegalArgumentException("Unable to retrieve current directory", exception); // Should never get here
         }
 
-        this.log = LogManager.getLogger(this);
-        this.getLog().info("Connecting to Database");
+        log.info("Connecting to Database");
         SimplifiedApi.getSessionManager().connectSql(config);
-        this.getLog().info("Database Initialized in {}ms", SimplifiedApi.getSessionManager().getSession().getInitializationTime());
-        this.getLog().info("Database Cached in {}ms", SimplifiedApi.getSessionManager().getSession().getStartupTime());
+        log.info("Database Initialized in {}ms", SimplifiedApi.getSessionManager().getSession().getInitializationTime());
+        log.info("Database Cached in {}ms", SimplifiedApi.getSessionManager().getSession().getStartupTime());
 
-        this.getLog().info("Loading Processors");
+        log.info("Loading Processors");
         ResourceItemsProcessor itemsProcessor = new ResourceItemsProcessor(HYPIXEL_RESOURCE_REQUEST.getItems());
         ResourceSkillsProcessor skillsProcessor = new ResourceSkillsProcessor(HYPIXEL_RESOURCE_REQUEST.getSkills());
         ResourceCollectionsProcessor collectionsProcessor = new ResourceCollectionsProcessor(HYPIXEL_RESOURCE_REQUEST.getCollections());
 
         try {
-            this.getLog().info("Processing Items");
+            log.info("Processing Items");
             itemsProcessor.process();
-            this.getLog().info("Processing Skills");
+            log.info("Processing Skills");
             skillsProcessor.process();
-            this.getLog().info("Processing Collections");
+            log.info("Processing Collections");
             collectionsProcessor.process();
         } catch (Exception exception) {
-            exception.printStackTrace();
+            log.atError()
+                .withThrowable(exception)
+                .log("An error occurred while processing the resource API.");
         }
 
         System.exit(0);
