@@ -2,14 +2,12 @@ package dev.sbs.updater;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.request.HypixelResourceRequest;
+import dev.sbs.api.data.sql.SqlConfig;
 import dev.sbs.updater.processor.resource.ResourceCollectionsProcessor;
 import dev.sbs.updater.processor.resource.ResourceItemsProcessor;
 import dev.sbs.updater.processor.resource.ResourceSkillsProcessor;
-import dev.sbs.updater.util.UpdaterConfig;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
-
-import java.io.File;
 
 @Getter
 @Log4j2
@@ -18,16 +16,8 @@ public class DatabaseUpdater {
     private static final HypixelResourceRequest HYPIXEL_RESOURCE_REQUEST = SimplifiedApi.getWebApi(HypixelResourceRequest.class);
 
     public DatabaseUpdater() {
-        UpdaterConfig config;
-        try {
-            File currentDir = new File(SimplifiedApi.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-            config = new UpdaterConfig(currentDir.getParentFile(), "updater");
-        } catch (Exception exception) {
-            throw new IllegalArgumentException("Unable to retrieve current directory", exception); // Should never get here
-        }
-
         log.info("Connecting to Database");
-        SimplifiedApi.getSessionManager().connectSql(config);
+        SimplifiedApi.getSessionManager().connect(SqlConfig.defaultSql());
         log.info("Database Initialized in {}ms", SimplifiedApi.getSessionManager().getSession().getInitializationTime());
         log.info("Database Cached in {}ms", SimplifiedApi.getSessionManager().getSession().getStartupTime());
 
