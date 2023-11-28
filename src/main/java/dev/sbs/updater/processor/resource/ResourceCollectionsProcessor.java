@@ -9,8 +9,8 @@ import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.sql.SqlRepository;
 import dev.sbs.api.util.collection.concurrent.ConcurrentList;
-import dev.sbs.api.util.collection.search.function.SearchFunction;
-import dev.sbs.api.util.data.tuple.Pair;
+import dev.sbs.api.util.collection.search.SearchFunction;
+import dev.sbs.api.util.data.tuple.pair.Pair;
 import dev.sbs.api.util.helper.StringUtil;
 import dev.sbs.updater.processor.Processor;
 
