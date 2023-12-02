@@ -1,18 +1,25 @@
 package dev.sbs.updater.processor;
 
 import lombok.Getter;
-import org.apache.logging.log4j.LogManager;
+import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.jetbrains.annotations.NotNull;
 
 @Getter
+@Log4j2
 public abstract class Processor<R> {
 
     private final R resourceResponse;
-    private final Logger log;
 
     public Processor(R resourceResponse) {
         this.resourceResponse = resourceResponse;
-        this.log = LogManager.getLogger(this);
+        Configurator.setLevel(log, Level.INFO);
+    }
+
+    public final @NotNull Logger getLog() {
+        return log;
     }
 
     public abstract void process();

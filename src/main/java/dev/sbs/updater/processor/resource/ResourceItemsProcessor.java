@@ -33,12 +33,12 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
     private static final SqlRepository<MinionTierSqlModel> minionTierRepository = (SqlRepository<MinionTierSqlModel>) SimplifiedApi.getRepositoryOf(MinionTierSqlModel.class);
 
     // Caches
-    private static final ConcurrentList<RaritySqlModel> rarityCache = rarityRepository.findAll();
-    private static final ConcurrentList<ItemTypeSqlModel> itemTypeCache = itemTypeRepository.findAll();
-    private static final ConcurrentList<ItemSqlModel> itemCache = itemRepository.findAll();
-    private static final ConcurrentList<AccessorySqlModel> accessoryCache = accessoryRepository.findAll();
-    private static final ConcurrentList<MinionSqlModel> minionCache = minionRepository.findAll();
-    private static final ConcurrentList<MinionTierSqlModel> minionTierCache = minionTierRepository.findAll();
+    private static final ConcurrentList<RaritySqlModel> rarityCache = Concurrent.newList(rarityRepository.findAll());
+    private static final ConcurrentList<ItemTypeSqlModel> itemTypeCache = Concurrent.newList(itemTypeRepository.findAll());
+    private static final ConcurrentList<ItemSqlModel> itemCache = Concurrent.newList(itemRepository.findAll());
+    private static final ConcurrentList<AccessorySqlModel> accessoryCache = Concurrent.newList(accessoryRepository.findAll());
+    private static final ConcurrentList<MinionSqlModel> minionCache = Concurrent.newList(minionRepository.findAll());
+    private static final ConcurrentList<MinionTierSqlModel> minionTierCache = Concurrent.newList(minionTierRepository.findAll());
 
     public ResourceItemsProcessor(ResourceItemsResponse resourceItemsResponse) {
         super(resourceItemsResponse);

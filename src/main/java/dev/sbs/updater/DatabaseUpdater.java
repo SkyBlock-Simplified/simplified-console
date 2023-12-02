@@ -3,11 +3,15 @@ package dev.sbs.updater;
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.hypixel.request.HypixelResourceRequest;
 import dev.sbs.api.data.sql.SqlConfig;
+import dev.sbs.api.util.helper.ResourceUtil;
+import dev.sbs.api.util.helper.StringUtil;
 import dev.sbs.updater.processor.resource.ResourceCollectionsProcessor;
 import dev.sbs.updater.processor.resource.ResourceItemsProcessor;
 import dev.sbs.updater.processor.resource.ResourceSkillsProcessor;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 
 @Getter
 @Log4j2
@@ -16,6 +20,11 @@ public class DatabaseUpdater {
     private static final HypixelResourceRequest HYPIXEL_RESOURCE_REQUEST = SimplifiedApi.getWebApi(HypixelResourceRequest.class);
 
     public DatabaseUpdater() {
+        ResourceUtil.getEnv("HYPIXEL_API_KEY")
+            .map(StringUtil::toUUID)
+            .ifPresent(value -> SimplifiedApi.getKeyManager().add("HYPIXEL_API_KEY", value));
+
+        Configurator.setLevel(log, Level.INFO);
         log.info("Connecting to Database");
         SimplifiedApi.getSessionManager().connect(SqlConfig.defaultSql());
         log.info("Database Initialized in {}ms", SimplifiedApi.getSessionManager().getSession().getInitializationTime());
