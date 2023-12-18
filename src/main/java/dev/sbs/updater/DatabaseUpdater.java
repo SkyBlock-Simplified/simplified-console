@@ -1,7 +1,7 @@
 package dev.sbs.updater;
 
 import dev.sbs.api.SimplifiedApi;
-import dev.sbs.api.client.hypixel.request.HypixelResourceRequest;
+import dev.sbs.api.client.hypixel.request.HypixelRequest;
 import dev.sbs.api.data.sql.SqlConfig;
 import dev.sbs.api.util.helper.ResourceUtil;
 import dev.sbs.api.util.helper.StringUtil;
@@ -17,7 +17,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 @Log4j2
 public class DatabaseUpdater {
 
-    private static final HypixelResourceRequest HYPIXEL_RESOURCE_REQUEST = SimplifiedApi.getWebApi(HypixelResourceRequest.class);
+    private static final HypixelRequest HYPIXEL_RESOURCE_REQUEST = SimplifiedApi.getApiRequest(HypixelRequest.class);
 
     public DatabaseUpdater() {
         ResourceUtil.getEnv("HYPIXEL_API_KEY")
