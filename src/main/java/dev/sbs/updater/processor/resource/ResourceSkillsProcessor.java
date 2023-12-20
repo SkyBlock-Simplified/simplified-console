@@ -1,7 +1,7 @@
 package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
-import dev.sbs.api.client.hypixel.response.resource.ResourceSkillsResponse;
+import dev.sbs.api.client.impl.hypixel.response.resource.ResourceSkillsResponse;
 import dev.sbs.api.data.model.skyblock.skill_levels.SkillLevelSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.sql.SqlRepository;

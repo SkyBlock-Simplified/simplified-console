@@ -1,7 +1,7 @@
 package dev.sbs.updater;
 
 import dev.sbs.api.SimplifiedApi;
-import dev.sbs.api.client.hypixel.request.HypixelRequest;
+import dev.sbs.api.client.impl.hypixel.request.HypixelRequest;
 import dev.sbs.api.data.sql.SqlConfig;
 import dev.sbs.api.util.helper.ResourceUtil;
 import dev.sbs.api.util.helper.StringUtil;

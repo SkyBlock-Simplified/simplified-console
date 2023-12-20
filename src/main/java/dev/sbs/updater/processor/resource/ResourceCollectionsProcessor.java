@@ -1,7 +1,7 @@
 package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
-import dev.sbs.api.client.hypixel.response.resource.ResourceCollectionsResponse;
+import dev.sbs.api.client.impl.hypixel.response.resource.ResourceCollectionsResponse;
 import dev.sbs.api.data.model.skyblock.collection_data.collection_item_tiers.CollectionItemTierSqlModel;
 import dev.sbs.api.data.model.skyblock.collection_data.collection_items.CollectionItemSqlModel;
 import dev.sbs.api.data.model.skyblock.collection_data.collections.CollectionSqlModel;
