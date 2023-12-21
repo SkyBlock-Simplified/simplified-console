@@ -11,9 +11,9 @@ import org.jetbrains.annotations.NotNull;
 @Log4j2
 public abstract class Processor<R> {
 
-    private final R resourceResponse;
+    private final @NotNull R resourceResponse;
 
-    public Processor(R resourceResponse) {
+    public Processor(@NotNull R resourceResponse) {
         this.resourceResponse = resourceResponse;
         Configurator.setLevel(log, Level.INFO);
     }
