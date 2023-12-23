@@ -10,8 +10,8 @@ import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.sql.SqlRepository;
 import dev.sbs.api.util.collection.concurrent.ConcurrentList;
 import dev.sbs.api.util.collection.search.SearchFunction;
-import dev.sbs.api.util.data.tuple.pair.Pair;
 import dev.sbs.api.util.helper.StringUtil;
+import dev.sbs.api.util.mutable.tuple.pair.Pair;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.Map;

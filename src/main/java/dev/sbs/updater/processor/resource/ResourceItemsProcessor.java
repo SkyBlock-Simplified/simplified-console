@@ -12,8 +12,8 @@ import dev.sbs.api.data.sql.SqlRepository;
 import dev.sbs.api.util.collection.concurrent.Concurrent;
 import dev.sbs.api.util.collection.concurrent.ConcurrentList;
 import dev.sbs.api.util.collection.search.SearchFunction;
-import dev.sbs.api.util.data.tuple.pair.Pair;
 import dev.sbs.api.util.helper.StringUtil;
+import dev.sbs.api.util.mutable.tuple.pair.Pair;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.List;
@@ -157,8 +157,7 @@ public class ResourceItemsProcessor extends Processor<ResourceItemsResponse> {
                 newRarity.setKey(item.getRarity());
                 newRarity.setName(StringUtil.capitalize(item.getRarity()));
                 newRarity.setOrdinal(
-                    rarityCache.findAll()
-                        .stream()
+                    rarityCache.stream()
                         .mapToInt(RaritySqlModel::getOrdinal)
                         .max()
                         .orElseThrow() + 1
