@@ -13,7 +13,7 @@ import dev.sbs.api.util.collection.concurrent.Concurrent;
 import dev.sbs.api.util.collection.concurrent.ConcurrentList;
 import dev.sbs.api.util.collection.search.SearchFunction;
 import dev.sbs.api.util.helper.StringUtil;
-import dev.sbs.api.util.mutable.tuple.pair.Pair;
+import dev.sbs.api.util.mutable.pair.Pair;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.List;
