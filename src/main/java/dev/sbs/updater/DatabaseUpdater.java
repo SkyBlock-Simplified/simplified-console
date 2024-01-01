@@ -24,6 +24,27 @@ public class DatabaseUpdater {
             .map(StringUtil::toUUID)
             .ifPresent(value -> SimplifiedApi.getKeyManager().add("HYPIXEL_API_KEY", value));
 
+        /*HttpServer.create()
+            .host("0.0.0.0")
+            .port(8000)
+            .compress(true)
+            .option(ChannelOption.SO_KEEPALIVE, true)
+            .route(routes -> routes
+                .get(
+                    "/mojang/user/{user}",
+                    (request, response) -> Mono.fromCallable(() -> {
+                            MojangProxy mojangProxy = SimplifiedApi.getMojangProxy();
+                            String user = request.param("user"); // Check not null
+                            MojangProfileResponse mojangProfileResponse = StringUtil.isUUID(user) ?
+                                mojangProxy.getMojangProfile(StringUtil.toUUID(user)) :
+                                mojangProxy.getMojangProfile(user);
+                            return SimplifiedApi.getGson().toJson(mojangProfileResponse);
+                        })
+                        .map(Mono::just)
+                        .flatMap(json -> response.status(200).sendString(json).then()))
+            )
+            .bindUntilJavaShutdown(Duration.ofSeconds(30), facade -> System.out.println("Server started"));*/
+
         Configurator.setLevel(log, Level.INFO);
         log.info("Connecting to Database");
         SimplifiedApi.getSessionManager().connect(SqlConfig.defaultSql());
