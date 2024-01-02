@@ -48,8 +48,8 @@ public class DatabaseUpdater {
         Configurator.setLevel(log, Level.INFO);
         log.info("Connecting to Database");
         SimplifiedApi.getSessionManager().connect(SqlConfig.defaultSql());
-        log.info("Database Initialized in {}ms", SimplifiedApi.getSessionManager().getSession().getInitializationTime());
-        log.info("Database Cached in {}ms", SimplifiedApi.getSessionManager().getSession().getStartupTime());
+        log.info("Database Initialized in {}ms", SimplifiedApi.getSessionManager().getSession().getInitialization());
+        log.info("Database Cached in {}ms", SimplifiedApi.getSessionManager().getSession().getStartup());
 
         log.info("Loading Processors");
         ResourceItemsProcessor itemsProcessor = new ResourceItemsProcessor(HYPIXEL_RESOURCE_REQUEST.getItems());
