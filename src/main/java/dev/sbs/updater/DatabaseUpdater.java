@@ -3,8 +3,8 @@ package dev.sbs.updater;
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.impl.hypixel.request.HypixelRequest;
 import dev.sbs.api.data.sql.SqlConfig;
-import dev.sbs.api.util.helper.ResourceUtil;
-import dev.sbs.api.util.helper.StringUtil;
+import dev.sbs.api.util.StringUtil;
+import dev.sbs.api.util.SystemUtil;
 import dev.sbs.updater.processor.resource.ResourceCollectionsProcessor;
 import dev.sbs.updater.processor.resource.ResourceItemsProcessor;
 import dev.sbs.updater.processor.resource.ResourceSkillsProcessor;
@@ -20,7 +20,7 @@ public class DatabaseUpdater {
     private static final HypixelRequest HYPIXEL_RESOURCE_REQUEST = SimplifiedApi.getApiRequest(HypixelRequest.class);
 
     public DatabaseUpdater() {
-        ResourceUtil.getEnv("HYPIXEL_API_KEY")
+        SystemUtil.getEnv("HYPIXEL_API_KEY")
             .map(StringUtil::toUUID)
             .ifPresent(value -> SimplifiedApi.getKeyManager().add("HYPIXEL_API_KEY", value));
 

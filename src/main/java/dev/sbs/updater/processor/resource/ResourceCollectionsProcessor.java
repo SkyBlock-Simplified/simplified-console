@@ -2,16 +2,16 @@ package dev.sbs.updater.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.impl.hypixel.response.resource.ResourceCollectionsResponse;
+import dev.sbs.api.collection.concurrent.ConcurrentList;
+import dev.sbs.api.collection.search.SearchFunction;
 import dev.sbs.api.data.model.skyblock.collection_data.collection_item_tiers.CollectionItemTierSqlModel;
 import dev.sbs.api.data.model.skyblock.collection_data.collection_items.CollectionItemSqlModel;
 import dev.sbs.api.data.model.skyblock.collection_data.collections.CollectionSqlModel;
 import dev.sbs.api.data.model.skyblock.items.ItemSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.sql.SqlRepository;
-import dev.sbs.api.util.collection.concurrent.ConcurrentList;
-import dev.sbs.api.util.collection.search.SearchFunction;
-import dev.sbs.api.util.helper.StringUtil;
-import dev.sbs.api.util.mutable.pair.Pair;
+import dev.sbs.api.mutable.pair.Pair;
+import dev.sbs.api.util.StringUtil;
 import dev.sbs.updater.processor.Processor;
 
 import java.util.Map;
