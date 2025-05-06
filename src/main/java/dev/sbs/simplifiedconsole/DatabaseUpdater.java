@@ -1,13 +1,13 @@
-package dev.sbs.updater;
+package dev.sbs.simplifiedconsole;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.impl.hypixel.request.HypixelRequest;
 import dev.sbs.api.data.sql.SqlConfig;
 import dev.sbs.api.util.StringUtil;
 import dev.sbs.api.util.SystemUtil;
-import dev.sbs.updater.processor.resource.ResourceCollectionsProcessor;
-import dev.sbs.updater.processor.resource.ResourceItemsProcessor;
-import dev.sbs.updater.processor.resource.ResourceSkillsProcessor;
+import dev.sbs.simplifiedconsole.processor.resource.ResourceCollectionsProcessor;
+import dev.sbs.simplifiedconsole.processor.resource.ResourceItemsProcessor;
+import dev.sbs.simplifiedconsole.processor.resource.ResourceSkillsProcessor;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;

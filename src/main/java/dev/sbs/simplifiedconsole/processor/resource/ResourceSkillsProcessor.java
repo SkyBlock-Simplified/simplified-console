@@ -1,4 +1,4 @@
-package dev.sbs.updater.processor.resource;
+package dev.sbs.simplifiedconsole.processor.resource;
 
 import dev.sbs.api.SimplifiedApi;
 import dev.sbs.api.client.impl.hypixel.response.resource.ResourceSkillsResponse;
@@ -7,7 +7,7 @@ import dev.sbs.api.data.model.skyblock.skill_levels.SkillLevelSqlModel;
 import dev.sbs.api.data.model.skyblock.skills.SkillSqlModel;
 import dev.sbs.api.data.sql.SqlRepository;
 import dev.sbs.api.mutable.pair.Pair;
-import dev.sbs.updater.processor.Processor;
+import dev.sbs.simplifiedconsole.processor.Processor;
 
 import java.util.Map;
 
