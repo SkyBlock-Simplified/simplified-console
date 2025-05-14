@@ -34,5 +34,29 @@ dependencies {
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.2'
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.9.2'
 
+    // Logging
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.20.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.20.0'
+
+    // Deserialization
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
+    implementation group: 'org.yaml', name: 'snakeyaml', version: '2.0'
+
+    // Database
+    implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '3.1.4'
+    implementation group: 'org.ehcache', name: 'ehcache', version: '3.10.8'
+    implementation group: 'org.hibernate', name: 'hibernate-hikaricp', version: '5.6.15.Final'
+    implementation group: 'org.hibernate', name: 'hibernate-jcache', version: '5.6.15.Final'
+
+    // Api Clients
+    implementation group: 'org.springframework.boot', name: 'spring-boot', version: '3.4.5'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '3.4.5'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '3.4.5'
+    testImplementation group: 'org.springframework.security', name: 'spring-security-test', version: '6.4.5'
+    implementation group: 'redis.clients', name: 'jedis', version: '4.4.3'
+
+    // Projects
+    implementation group: 'com.discord4j', name: 'discord4j-core', version: '3.3.0-SNAPSHOT'
     implementation project(':api')
+    implementation project(':discord-api')
 }
