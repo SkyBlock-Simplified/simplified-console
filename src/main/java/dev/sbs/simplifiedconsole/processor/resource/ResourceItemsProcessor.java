@@ -12,7 +12,7 @@ import dev.sbs.api.data.model.skyblock.minion_data.minion_tiers.MinionTierSqlMod
 import dev.sbs.api.data.model.skyblock.minion_data.minions.MinionSqlModel;
 import dev.sbs.api.data.model.skyblock.rarities.RaritySqlModel;
 import dev.sbs.api.data.sql.SqlRepository;
-import dev.sbs.api.mutable.pair.Pair;
+import dev.sbs.api.stream.pair.Pair;
 import dev.sbs.api.util.StringUtil;
 import dev.sbs.simplifiedconsole.processor.Processor;
 
